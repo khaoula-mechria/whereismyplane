@@ -1,4 +1,4 @@
-# FlightWise — Feuille de route
+# AeroPulse — Feuille de route (anciennement FlightWise)
 
 > Document stable : décrit **toutes les étapes**. L'avancement se suit dans [PROGRESS.md](PROGRESS.md).
 > Statut : **brouillon à réviser** (à relire avant le début de l'étape 1).
@@ -9,7 +9,8 @@
 - Séparation train / validation / test **chronologique**.
 - Le LLM n'invente aucun chiffre : tout passe par des outils contrôlés (pas de SQL libre).
 - **Local d'abord** : valider données et modèles avant d'activer des ressources AWS payantes.
-- Les données couvrent janvier–juin 2022, SEA et PDX uniquement : à signaler dans l'interface.
+- Dataset NYC Flight Delays and Weather (2023–2025), JFK/EWR/LGA, caractéristiques à vérifier sur le fichier réel : couverture et limites à signaler dans l'interface.
+- **Budget** : 100 USD/mois maximum, région `us-east-1` ; aucun déploiement payant avant estimation des coûts ([cost-estimate.md](04-quality/cost-estimate.md)).
 
 ## Périmètre
 
@@ -24,7 +25,9 @@
 - **Résultat attendu** : schéma et qualité des données connus.
 - **Critères de fin** :
   - volumes réels vérifiés (vols, aéroports, période) ;
-  - `docs/data_dictionary.md` rédigé : chaque colonne avec sa signification, son type et sa disponibilité à T-2h ;
+  - source exacte et licence du dataset documentées ([dataset-card.md](dataset-card.md)) ;
+  - possibilité de reconstruire la météo disponible à T-2h vérifiée sur les horodatages (sinon : blocage signalé) ;
+  - `docs/data-dictionary.md` complété : chaque colonne avec sa signification, son type et sa disponibilité à T-2h ;
   - problèmes de qualité listés (doublons, valeurs manquantes, incohérences).
 
 ### Étape 2 — Pipeline de préparation
@@ -109,4 +112,4 @@
 
 - Fuite de données via la météo ou les statistiques historiques.
 - Volume limité par route et par compagnie : prévoir un seuil minimal d'échantillons dans les outils statistiques.
-- Coûts AWS : endpoints SageMaker laissés actifs, Knowledge Base, ressources oubliées.
+- Coûts AWS (plafond 100 USD/mois) : endpoints SageMaker laissés actifs, Knowledge Base, ressources oubliées. Les alertes AWS Budgets ne coupent pas les dépenses.
