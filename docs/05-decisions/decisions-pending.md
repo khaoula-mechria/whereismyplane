@@ -28,6 +28,9 @@ Nom du projet : **AeroPulse** (anciennement FlightWise). Dataset : **NYC Flight 
 | D-16 | Seuil minimal de 30 vols pour afficher une statistique | Tranchée | [0013](adr/0013-mvp-api-usage-scope.md) | T2.7, T7.2 | IR-01 / AC-13 |
 | D-17 | Séparation chronologique adaptée au dataset retenu : entraînement 2023 + partie de 2024, validation fin 2024, test 2025 ; dates exactes après inspection | Tranchée (principe) — **dates en attente de vérification** | [0004](adr/0004-chronological-split.md) | T3.6 | FR-07 / AC-05–AC-07 |
 
+| D-18 | **Stratégie d'acquisition du dataset** : reconstruction locale depuis BTS + NOAA Global Hourly avec cutoff T-2h (option B) ; échantillon Mostly Right de 500 lignes comme recette ; pas d'abonnement ; prévisions hors MVP | **Tranchée (approuvée le 2026-11-06)** — le téléchargement complet attend la lecture des licences | [0016](adr/0016-dataset-acquisition-strategy.md) | T1.1–T1.6, T2.1–T2.5 | FR-26, FR-27 / AC-23, AC-24 |
+| D-19 | Traitement des vols **annulés / déroutés** : proposition = exclus des cibles ML, conservés dans les statistiques descriptives avec indicateur (cas d'un vol annulé avec retard renseigné à comprendre) | **Tranchée (approuvée le 2026-11-06)** | [0016](adr/0016-dataset-acquisition-strategy.md) | T1.4, T3.2 | FR-06 / AC-05, AC-06 |
+
 Note : l'arbitrage a d'abord indiqué de ne pas figer région, modèle et budget (D-12), puis fourni la région et le budget. Le modèle Bedrock reste explicitement non choisi.
 
 ## 2. Éléments encore bloqués
@@ -36,9 +39,11 @@ Note : l'arbitrage a d'abord indiqué de ne pas figer région, modèle et budget
 
 | Information | État | Bloque |
 |---|---|---|
-| Source exacte du dataset (plateforme, URL, version) | Non fournie | T1.1 ; documentation du dataset |
-| Emplacement du fichier téléchargé | Non fourni | T1.2 et tout le travail sur les données |
-| Licence du dataset | Non vérifiée | Utilisation des données dans le dépôt |
+| Source du dataset | **Identifiée** : Mostly Right (`nyc_flight_delays_ml`) ; sources d'origine BTS et NOAA Global Hourly | — |
+| Fichier complet du dataset | **Non téléchargé** (abonnement refusé) ; remplacé par la reconstruction (D-18) | Approbation de D-18 |
+| Licence NOAA Global Hourly | **Lue le 2026-11-06** : ouverte, attribution demandée | — |
+| Licence BTS On-Time | **Aucun texte lu** (403), aucune restriction trouvée : **acceptation du risque résiduel par le propriétaire requise** avant le téléchargement complet | T1.1 (AC-23) |
+| Approbation de D-18 (stratégie d'acquisition) et de D-19 (annulés/déroutés) | **Reçue le 2026-11-06** | — |
 | Date limite du projet (U-03) | Non fournie | Calendrier réel ; priorisation si retard |
 | Temps disponible, taille de l'équipe (U-08) | Non fournis | Estimations (A-01 conservée comme hypothèse) |
 | Accès à un compte AWS | Non confirmé | T0.6, T8.1 et phases AWS |
@@ -60,7 +65,7 @@ Note : l'arbitrage a d'abord indiqué de ne pas figer région, modèle et budget
 
 | Tâche(s) | Condition de démarrage |
 |---|---|
-| T1.2 → T1.6, WP2 | Fichier du dataset disponible et licence compatible |
+| Téléchargement complet BTS/NOAA (T1.1), puis WP2 | Licences BTS/NOAA lues et jugées compatibles (D-18 est approuvée) |
 | T3.4, T3.7 (météo) | Faisabilité T-2h confirmée (D-01) |
 | T3.6 | Couverture mensuelle vérifiée |
 | T5.x à T9.x (déploiements) | Estimation de coûts approuvée (G0) |

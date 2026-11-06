@@ -54,15 +54,16 @@ Documentation de planification et de conception. Les décisions D-01 à D-17 ont
 ### 05 — Décisions
 | Document | Contenu |
 |---|---|
-| [adr/](05-decisions/adr/README.md) | ADR-0001…0015 |
-| [decisions-pending.md](05-decisions/decisions-pending.md) | Registre D-01…D-17 : statuts, blocages, traçabilité |
+| [adr/](05-decisions/adr/README.md) | ADR-0001…0016 |
+| [decisions-pending.md](05-decisions/decisions-pending.md) | Registre D-01…D-19 : statuts, blocages, traçabilité |
 
 ### Pilotage et données
 | Document | Rôle |
 |---|---|
 | [ROADMAP.md](ROADMAP.md) | Les 9 étapes, critères de fin (stable) |
 | [PROGRESS.md](PROGRESS.md) | État courant, prochaines actions (vivant) |
-| [dataset-card.md](dataset-card.md) | Dataset NYC 2023–2025 : annoncé vs vérifié, licence, test de faisabilité T-2h |
+| [dataset-card.md](dataset-card.md) | Dataset NYC 2023–2025 : annoncé vs vérifié, licences, cutoff T-1h, test T-2h |
+| [data-acquisition-study.md](data-acquisition-study.md) | Étude : échantillon Mostly Right vs reconstruction BTS + NOAA, volumes, ETL, tests |
 | [data-dictionary.md](data-dictionary.md) | Dictionnaire de données (squelette, à remplir en T1.3) |
 | [04-quality/cost-estimate.md](04-quality/cost-estimate.md) | Budget 100 USD/mois, garde-fous, estimation à produire (G0) |
 

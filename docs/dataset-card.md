@@ -1,74 +1,77 @@
 # Fiche du dataset — NYC Flight Delays and Weather (2023–2025)
 
-> Statut : **candidat principal confirmé par le propriétaire du projet ; aucune caractéristique n'est vérifiée.** Le fichier réel n'a pas encore été inspecté. Les valeurs ci-dessous sont des **annonces**. Voir [ADR-0010](05-decisions/adr/0010-dataset-nyc-2023-2025.md). Le dataset initial (Flights & Weather 2022) est abandonné.
+> Statut : **spécification de référence ; stratégie d'acquisition proposée dans [ADR-0016](05-decisions/adr/0016-dataset-acquisition-strategy.md), en attente d'approbation.** Étude détaillée : [data-acquisition-study.md](data-acquisition-study.md). Dataset initial (Flights & Weather 2022) abandonné ([ADR-0010](05-decisions/adr/0010-dataset-nyc-2023-2025.md)).
+
+Légende : **[V]** vérifié (source indiquée) · **[H]** hypothèse · **[?]** non résolu · **[NV]** annoncé, non vérifié.
 
 ## 1. Identité
 
 | Champ | Valeur | Statut |
 |---|---|---|
-| Nom | NYC Flight Delays and Weather (2023–2025) | Confirmé (choix) |
-| Source exacte (plateforme, URL, auteur, version, date de téléchargement) | À documenter | **En attente** — à fournir par le propriétaire |
-| Licence et conditions d'usage | À vérifier | **En attente de vérification** |
-| Emplacement local du fichier | À fournir | **En attente** |
-| Taille du fichier, format, somme de contrôle | À relever | Non vérifié |
+| Titre publié | « NYC flight delays and weather, 2023–2025 » ; table `nyc_flight_delays_ml` ; slug `nyc-flight-delays-and-weather-januaryjuly-2025` (le slug dit « januaryjuly-2025 », le titre « 2023–2025 ») | [V] catalogue public |
+| Éditeur | Mostly Right (`mostlyrightmd`) — https://mostlyright.md/datasets/nyc-flight-delays-and-weather-januaryjuly-2025 | [V] |
+| Version publiée | publié le 2026-09-14, mis à jour le 2026-10-01 (catalogue) ; la page affichait aussi « v4 » et une cadence « Daily » alors que le texte dit « monthly BTS exports » | [V] affichage, incohérence [?] |
+| Sources d'origine déclarées | BTS On-Time Reporting, NOAA Global Hourly, historique des stations ISD ; OurAirports pour les aéroports | [V] déclaré par l'éditeur |
+| Licence de la table | champ `license` du catalogue : **`null`** ; texte : « government-data public-domain assertions » | [V] ; **licence formelle non établie [?]** |
+| Accès gratuit | échantillon public de 500 lignes ; au-delà : compte (allocation de 100 000 lignes/mois, partagée) ou abonnement | [V] |
+| Téléchargement complet | compte comme lignes lues sur le plan gratuit ; **non retenu** (pas d'abonnement) | [V] / décision du propriétaire |
+| Emplacement local du fichier | aucun fichier complet | — |
 
-Règle : aucune donnée n'est utilisée dans le dépôt avant que la licence permette cet usage. Le fichier n'est pas versionné dans git (`data/` ignoré).
+## 2. Caractéristiques
 
-## 2. Caractéristiques annoncées vs vérifiées
-
-| Caractéristique | Annoncé | Vérifié | Tâche |
+| Caractéristique | Annoncé (éditeur) | Vérifié par nous | Source de la vérification |
 |---|---|---|---|
-| Nombre de vols | ≈ 1 056 897 | Non | T1.2 |
-| Nombre de variables | 33 | Non | T1.2 |
-| Aéroports | JFK, EWR, LGA | Non | T1.2 |
-| Période | janvier 2023 – juillet 2025 | Non | T1.2 |
-| Contenu | Vols historiques + météo associée | Non | T1.2 |
-| Horodatage météo | Inconnu | **Non — critique pour D-01** | T1.5 |
-| Nature des aéroports (départ seul ? arrivées aussi ?) | Inconnue | Non | T1.2 |
-| Vols annulés / déroutés | Inconnu | Non | T1.2 |
+| Nombre de vols | 1 056 897 (moyenne 34 093 par mois) | **Non** [NV] | — (à reconstruire, AC-23) |
+| Colonnes | 33 | **Oui, 33 noms et significations** [V] | catalogue public et échantillon |
+| Aéroports d'origine | JFK, EWR, LGA | Oui sur l'échantillon [V] ; ensemble [NV] | échantillon |
+| Fenêtre | 2023-01-01 → 2025-07-31 ; dates en heure de New York, horodatages en UTC | Début : oui sur l'échantillon (2023-01-01) [V] ; fin [NV] | échantillon |
+| Destinations | domestiques ; internationaux et opérateurs non déclarants exclus | 72 destinations dans l'échantillon [V] | échantillon |
+| Appariement météo | 99,96 % des vols ; 384 sans météo ; aucune observation après le cutoff ni de plus de 3 h | Échantillon : 0 sans météo, 0 après cutoff, âge ≤ 59 min [V] ; ensemble [NV] | échantillon |
+| `destination_name` manquant | 42 645 vols | 42/500 dans l'échantillon [V] ; ensemble [NV] | échantillon |
+| Validation | « All 31 monthly totals match the source exports, with zero duplicate flight keys » | 0 doublon dans l'échantillon [V] ; reste [NV] | échantillon |
 
-## 3. Vérifications à faire à l'inspection (T1.1 à T1.6)
+## 3. Point critique : cutoff de 1 heure, pas de 2 heures [V]
 
-1. Colonnes, types, unités, fuseaux horaires ; comparaison avec les 33 variables annoncées.
-2. Couverture temporelle **mois par mois** (trous, mois incomplets, notamment juillet 2025).
-3. Volumétrie par aéroport, compagnie, itinéraire (évaluation de IR-01, R-17).
-4. Doublons et clé candidate d'un vol.
-5. Prévalence des retards > 15 min et distribution de `dep_delay` (déséquilibre, R-04).
-6. Traitement des annulations/déroutages (inclus ou exclus de la cible : à décider avec les données).
-7. **Météo** : voir section 4.
-8. Licence, source, version.
+Le dataset définit `feature_cutoff_utc = scheduled_departure_utc − 60 min` (500/500 lignes) et apparie la dernière observation météo « at or before the one-hour cutoff ». Le contrat d'AeroPulse est **T-2h** ([ADR-0003](05-decisions/adr/0003-t-minus-2h-horizon.md)). Les colonnes météo de ce dataset ne peuvent donc pas servir telles quelles, et l'historique des observations n'y est pas disponible. Voir [data-acquisition-study.md](data-acquisition-study.md) §1.
 
-## 4. Test de faisabilité de D-01 (météo disponible à T-2h)
+L'éditeur précise aussi : « Weather observation timestamps do not establish when reports became available » et « Retrospective research, with no guarantee of point-in-time report availability ».
 
-La décision D-01 (option A : dernière observation ≤ T-2h) est **tranchée sous condition** : elle n'est maintenue que si les horodatages météo permettent de reconstruire ce qui était disponible à T-2h.
+## 4. Échantillon public (500 lignes) — résumé [V]
 
-| Question | Si oui | Si non |
+Un seul jour (2023-01-01), JFK 240 / LGA 162 / EWR 98, 12 compagnies, 72 destinations, aucun doublon de clé, UTC = heure locale + 5 h, retards cohérents avec les indicateurs, 5 annulés (dont un avec un retard renseigné), 1 dérouté, nombres renvoyés en chaînes par l'API anonyme. **Non représentatif, inutilisable pour entraîner ou évaluer.** Détail dans l'étude, §2.
+
+## 5. Sources d'origine
+
+| Source | Fichiers | Licence / conditions |
 |---|---|---|
-| Chaque observation météo a-t-elle un horodatage propre (heure d'observation) ? | Continuer | **Blocage** |
-| Peut-on, pour un vol, retrouver la dernière observation dont l'horodatage est ≤ T-2h pour l'aéroport de départ ? | Continuer | **Blocage** |
-| L'âge de cette observation est-il acceptable (âge maximal à fixer à l'inspection) pour une part suffisante de vols ? | Option A confirmée | Documenter la limite ; si insuffisant, blocage |
-| La météo fournie est-elle seulement « au moment du départ » (une valeur par vol, sans série temporelle) ? | — | **Blocage** pour la météo (c'est une fuite) |
+| BTS On-Time Reporting Carrier | 31 archives mensuelles (2023-01 → 2025-07), ≈ 900 Mo [NV] ; formulaire de téléchargement et répertoire `PREZIP` | **Aucun texte de licence ou de restriction lu** pour cette table (pages de politique en 403) ; pas de licence formelle établie [?]. Voir étude §3 |
+| NOAA NCEI Global Hourly | 9 CSV (3 stations × 2023–2025), 63 137 551 octets [V] ; bucket `noaa-global-hourly-pds` (`us-east-1`) | **Ouverte, usage libre, attribution demandée, sans suggérer l'aval de NOAA, sans présenter des données modifiées comme originales** [V : registre AWS NODD, lu le 2026-11-06]. Restriction WMO Rés. 40 : données **non américaines** seulement |
+| Stations | JFK 74486094789 · LGA 72503014732 · EWR 72502014734 | [V] (noms lus dans les fichiers 2024) |
 
-**En cas de blocage** : le signaler dans [PROGRESS.md](PROGRESS.md) et dans une mise à jour de [ADR-0009](05-decisions/adr/0009-weather-at-t2h.md), **sans créer de données artificielles** (pas d'interpolation inventée, pas de météo simulée). Les alternatives à arbitrer alors par le propriétaire : source de météo historique externe (à documenter et licencier), entraînement sans variables météo, ou autre dataset.
+NOAA : conditions lues et acceptables (attribution à citer dans les livrables). BTS : aucune restriction trouvée mais aucune licence formelle non plus ; usage prévu = analyse locale, sans redistribution des fichiers bruts (AC-23 partiellement satisfait, résidu à accepter par le propriétaire). Les fichiers bruts ne sont ni versionnés ni redistribués.
 
-Les tâches T3.4 (jointure météo) et T3.7 (non-fuite météo) ne démarrent pas avant la levée de cette condition.
+## 6. Test de faisabilité de D-01 (météo disponible à T-2h)
 
-## 5. Découpage chronologique (indicatif, D-17)
+D-01 reste tranchée **sous condition** (option A : dernière observation ≤ T-2h). Éléments d'évidence mis à jour :
 
-Principe tranché : séparation chronologique adaptée à la période réellement disponible.
-
-| Jeu | Période indicative | Remarque |
+| Question | Évidence | Statut |
 |---|---|---|
-| Entraînement | 2023 et une partie de 2024 | Fin exacte à fixer après inspection |
-| Validation | période ultérieure de 2024 | Début/fin exacts à fixer |
-| Test | 2025 (jusqu'à la dernière date réellement présente) | Peut être incomplet si juillet 2025 est partiel |
+| Observations avec horodatage propre ? | ISD : `DATE` en CSV, heure d'observation « based on UTC » ; ligne de 00:51 avec METAR « 010051Z » | [V] |
+| Retrouver, pour un vol, la dernière observation ≤ T-2h à l'aéroport de départ ? | Structure des fichiers NOAA le permet (séries horaires par station) ; à exécuter sur les vraies données | [H] jusqu'à T1.5 |
+| Âge acceptable ? | Âge à mesurer sur 2023–2025 ; Mostly Right borne à 3 h pour T-1h | [?] |
+| La météo est-elle fournie seulement « au départ » ? | Non pour NOAA (séries) ; oui pour les colonnes du dataset Mostly Right (une valeur par vol) | [V] |
 
-Les dates exactes sont déterminées en T3.6, une fois la couverture mensuelle vérifiée. Elles ne sont pas figées ici. Une répartition en proportion de vols (et non seulement en mois) sera examinée pour éviter un jeu de validation ou de test trop petit.
+**En cas de blocage** (observations incomplètes, trous excessifs) : signaler dans PROGRESS.md et ADR-0009, **aucune donnée artificielle** ; arbitrage du propriétaire.
 
-## 6. Limites à afficher (provisoires)
+## 7. Découpage chronologique (indicatif, D-17)
 
-- Les données sont historiques (2023–2025) et limitées à JFK, EWR et LGA (sous réserve de vérification) ; pas de conditions actuelles.
-- La météo utilisée est une observation antérieure à T-2h, pas une prévision (sous réserve de D-01).
-- Les contributions SHAP indiquent une influence sur le modèle, pas une cause.
+Entraînement 2023 + partie de 2024 ; validation fin 2024 ; test 2025 (jusqu'à la dernière date réellement présente). Dates exactes en T3.6 d'après la couverture mensuelle réelle. Le jeu de test 2025 couvre au plus janvier–juillet.
+
+## 8. Limites à afficher (provisoires)
+
+- Données historiques 2023–2025, aéroports JFK/EWR/LGA ; pas de conditions actuelles.
+- Météo = dernière observation ≤ T-2h, **pas une prévision** (sous réserve de D-01).
+- Contributions SHAP = influence sur le modèle, pas causalité.
+- Statistiques sur moins de 30 vols non affichées.
 
 Liens : [data-dictionary.md](data-dictionary.md) · [scope-and-constraints.md](01-planning/scope-and-constraints.md) · [decisions-pending.md](05-decisions/decisions-pending.md)

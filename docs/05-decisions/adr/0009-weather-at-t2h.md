@@ -22,6 +22,11 @@ La synthèse précise que les observations météo postérieures à T-2h ne doiv
 
 **Condition** : l'option A n'est maintenue que si les horodatages météo permettent réellement de reconstruire les observations disponibles à T-2h. Le test de faisabilité est décrit dans [dataset-card.md](../../dataset-card.md), section 4.
 
+## Évidence ajoutée le 2026-11-06
+
+- Les fichiers NOAA Global Hourly fournissent des séries d'observations horodatées (UTC) par station ; le dataset Mostly Right, lui, n'apparie qu'**une** observation par vol, avec un cutoff de **T-1h** : ses colonnes météo ne conviennent pas à T-2h ([data-acquisition-study.md](../../data-acquisition-study.md) §1).
+- La condition reste donc à vérifier sur les observations NOAA reconstruites (AC-24), avec la réserve que le décalage de publication des observations n'est pas documenté. Voir [ADR-0016](0016-dataset-acquisition-strategy.md).
+
 ## Si la condition n'est pas satisfaite
 
 1. Signaler le **blocage** dans PROGRESS.md et dans cette ADR.

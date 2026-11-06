@@ -42,4 +42,13 @@ Règles de dépendance : `tools/` ne dépend ni de Bedrock ni de `api/` ; `featu
 
 ## Commandes
 
-À définir en WP0 (gestionnaire de dépendances : uv, D-11). Mettre à jour cette section dès que les commandes existent.
+Gestionnaire : **uv** (D-11). Depuis la racine du dépôt :
+
+- `uv sync` — installer les dépendances (crée `.venv`, génère `uv.lock`)
+- `uv run ruff check` / `uv run ruff format` — lint / formatage
+- `uv run mypy` — typage strict
+- `uv run pytest` — tests
+- `uv run python scripts/check_secrets.py` — scan de secrets (aussi en CI)
+- `uv run pre-commit install` — active les hooks (optionnel)
+
+Constantes centrales (seuil 15 min, horizon T-2h, colonnes interdites, stations NOAA, seuil de 30 vols) : `src/aeropulse/config.py`. Ne pas dupliquer ces valeurs ailleurs.

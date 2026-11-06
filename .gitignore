@@ -1,0 +1,38 @@
+# Données (jamais versionnées : licence, taille) — voir docs/dataset-card.md
+data/
+*.parquet
+*.csv
+*.zip
+!tests/fixtures/*.csv
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.python-version
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# CDK / Node (étapes ultérieures)
+cdk.out/
+node_modules/
+
+# Éditeur / OS
+.idea/
+Thumbs.db
+.DS_Store

@@ -19,6 +19,7 @@ Une ADR par décision structurante : contexte, décision, alternatives, conséqu
 | [0013](0013-mvp-api-usage-scope.md) | Périmètre d'usage de l'API en MVP | Acceptée | D-02, D-05, D-09, D-13, D-16 |
 | [0014](0014-development-tooling.md) | uv, React + Vite | Acceptée | D-04, D-11 |
 | [0015](0015-classification-threshold-selection.md) | Choix du seuil de classification | Acceptée | D-08 |
+| [0016](0016-dataset-acquisition-strategy.md) | Stratégie d'acquisition du dataset (reconstruction BTS + NOAA) | Acceptée (licences à lire avant téléchargement complet) | D-18, D-19 |
 
 D-10 (objectifs de latence) et D-14 (documents de pilotage) n'ont pas d'ADR : voir [decisions-pending.md](../decisions-pending.md).
 

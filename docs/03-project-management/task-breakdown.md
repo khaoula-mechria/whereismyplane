@@ -33,8 +33,8 @@ Détail et conditions dans [decisions-pending.md](../05-decisions/decisions-pend
 
 | ID | Tâche | Dép. | Prio | Livrable | Critère |
 |---|---|---|---|---|---|
-| T1.1 | Documenter la source exacte du dataset NYC 2023–2025 et sa licence ; obtenir le fichier, calculer un checksum | U-12 (informations du propriétaire) | P0 | [dataset-card.md](../dataset-card.md) complétée | AC-23, A-02 levée, R-15, R-20 |
-| T1.2 | Profiler : schéma, volumétrie, couverture mensuelle, nulls, doublons, aéroports ; comparer aux valeurs annoncées (1 056 897 vols, 33 variables, JFK/EWR/LGA, 2023-01 → 2025-07) | T1.1 | P0 | Notebook/rapport | U-01 levée, AC-23 |
+| T1.1 | **(Après approbation de D-18)** Lire et consigner les licences/conditions d'usage BTS et NOAA ; télécharger les 31 archives BTS et les 9 CSV NOAA ; consigner URL, tailles, sommes de contrôle ([data-acquisition-study.md](../data-acquisition-study.md) §5) | D-18 approuvée | P0 | Manifeste de sources + [dataset-card.md](../dataset-card.md) complétée | AC-23, A-02 levée, R-15, R-20 |
+| T1.2 | Profiler les sources : schéma, volumétrie mensuelle, couverture NOAA 2025, nulls, doublons ; comparer aux valeurs annoncées par Mostly Right (1 056 897 vols, 33 variables, JFK/EWR/LGA, 2023-01 → 2025-07) ; test de réplication sur l'échantillon public (2023-01-01) | T1.1 | P0 | Notebook/rapport | U-01 levée, AC-23 |
 | T1.3 | Compléter [data-dictionary.md](../data-dictionary.md) avec « disponible à T-2h ? » par colonne | T1.2 | P0 | Dictionnaire | AC-01 |
 | T1.4 | Analyser la distribution de `dep_delay`, la prévalence des retards > 15 min, la couverture par compagnie/itinéraire (nombre de combinaisons sous 30 vols) | T1.2 | P0 | Synthèse | R-04, R-17 chiffrés |
 | T1.5 | Vérifier la faisabilité de D-01 (test de [dataset-card.md](../dataset-card.md) §4) ; mettre à jour ADR-0009 ; **si impossible : signaler le blocage, aucune donnée artificielle** | T1.3 | P0 | Rapport de faisabilité + ADR-0009 | AC-24, **G1** |
@@ -44,7 +44,7 @@ Détail et conditions dans [decisions-pending.md](../05-decisions/decisions-pend
 
 | ID | Tâche | Dép. | Prio | Livrable | Critère |
 |---|---|---|---|---|---|
-| T2.1 | Ingestion vers la zone raw locale (comptage, checksum) | T1.6 | P0 | Script | Lignes raw = source (AC-01) |
+| T2.1 | Ingestion BTS + NOAA vers la zone raw locale (manifeste, comptage, checksum) puis bronze Parquet typé, selon le pipeline de [data-acquisition-study.md](../data-acquisition-study.md) §8 | T1.6 | P0 | Script | Lignes raw = source (AC-01) |
 | T2.2 | Règles de nettoyage documentées et implémentées | T1.4 | P0 | Module + doc | AC-02 |
 | T2.3 | Normalisation des dates et fuseaux | T1.6 | P0 | Module + tests | Dates valides |
 | T2.4 | Contrôles de validation bloquants (schéma, plages, doublons) | T2.2 | P0 | Rapport de validation | NFR-08, AC-02 |
