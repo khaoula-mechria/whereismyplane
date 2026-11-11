@@ -62,7 +62,7 @@ Source officielle : Bureau of Transportation Statistics, table **« Reporting Ca
 | Point | Résultat |
 |---|---|
 | Page de téléchargement | `https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ&QO_fu146_anzr=b0-gvzr` (formulaire : champs, « Prezipped File », filtres géographie/année/mois) |
-| Fichiers préformatés | répertoire `https://www.transtats.bts.gov/PREZIP/` ; exemple listé : `On_Time_Reporting_Carrier_On_Time_Performance_(1987_present)_2023_12.zip` (28 818 502 octets). Le motif exact des noms (avec ou sans parenthèses) est incohérent entre les deux lectures : **[?]** à fixer en listant le répertoire |
+| Fichiers préformatés | répertoire `https://www.transtats.bts.gov/PREZIP/` ; exemple listé : `On_Time_Reporting_Carrier_On_Time_Performance_(1987_present)_2023_12.zip` (28 818 502 octets). **Motif résolu le 2026-11-06 par requêtes HEAD [V]** : `On_Time_Reporting_Carrier_On_Time_Performance_1987_present_<ANNÉE>_<MOIS>.zip` (sans parenthèses, mois sans zéro initial) ; les 31 fichiers 2023-01 → 2025-07 répondent 200 |
 | API | **aucune API documentée trouvée** [NV : absence dans les pages lues] |
 | Dernier mois disponible | août 2026 [V : page de téléchargement]. Présence de janvier 2023 à juillet 2025 : vérifiée pour la table Marketing ; pour la table Reporting, seule la présence du fichier 2023_12 est lue mot pour mot, les autres mois viennent d'un résumé du listing **[NV]** |
 | Filtre par aéroport | **non disponible** sur le formulaire (filtre par état/année/mois) : filtrage par `Origin` après téléchargement. EWR est dans le New Jersey [H : donc un filtre d'état New York le manquerait] |
@@ -152,7 +152,7 @@ Les observations ne sont **pas** des prévisions. Ce que les sources lues disent
 
 | Élément | Taille / effort | Statut |
 |---|---|---|
-| BTS : 31 archives mensuelles (2023-01 → 2025-07) | ≈ 900 Mo au total (24,7–34,4 Mo par fichier) | **[NV]** : un seul fichier Reporting (28 818 502 o) et deux fichiers Marketing sont lus mot pour mot ; les 28 autres tailles proviennent d'un résumé automatique du listing : à re-mesurer au téléchargement |
+| BTS : 31 archives mensuelles (2023-01 → 2025-07) | **900 608 820 octets** au total (24 730 977 à 34 427 174 octets par fichier) | **[V]** : en-têtes `Content-Length` lus par HEAD le 2026-11-06 (`python -m aeropulse.data.download`, dry-run) ; sommes de contrôle à calculer au téléchargement |
 | BTS décompressé (CSV national) | **non mesuré** | [?] |
 | NOAA : 9 fichiers CSV (3 stations × 2023–2025) | 63 137 551 octets ≈ 63 Mo | **[V]** |
 | Résultat (≈ 1,06 M vols × ~35–40 colonnes en Parquet) | **non mesuré** ; l'ordre de grandeur doit être confirmé par construction | [?] |
@@ -243,7 +243,7 @@ flowchart LR
 ## 11. Questions non résolues
 
 1. Licence formelle de la table BTS On-Time (aucun texte lu, pages de politique en 403) ; application éventuelle de la restriction WMO Résolution 40 aux copies S3 (visant les données non américaines). NOAA ISD : licence ouverte avec attribution lue (voir §4).
-2. Motif exact des noms de fichiers BTS Reporting et tailles réelles (à mesurer).
+2. ~~Motif exact des noms de fichiers BTS et tailles~~ : résolu le 2026-11-06 (HEAD). Reste : contenu réel des archives (décompressé, colonnes) à lire après téléchargement.
 3. Couverture des fichiers NOAA 2025 jusqu'à fin juillet.
 4. Traitement des vols annulés dans BTS (cas du vol annulé avec retard de 49 min dans l'échantillon).
 5. Latence de publication des observations (non documentée).

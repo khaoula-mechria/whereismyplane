@@ -44,7 +44,7 @@ Un seul jour (2023-01-01), JFK 240 / LGA 162 / EWR 98, 12 compagnies, 72 destina
 
 | Source | Fichiers | Licence / conditions |
 |---|---|---|
-| BTS On-Time Reporting Carrier | 31 archives mensuelles (2023-01 → 2025-07), ≈ 900 Mo [NV] ; formulaire de téléchargement et répertoire `PREZIP` | **Aucun texte de licence ou de restriction lu** pour cette table (pages de politique en 403) ; pas de licence formelle établie [?]. Voir étude §3 |
+| BTS On-Time Reporting Carrier | 31 archives mensuelles (2023-01 → 2025-07), 900 608 820 octets au total [V : HEAD] ; formulaire de téléchargement et répertoire `PREZIP` | **Aucun texte de licence ou de restriction lu** pour cette table (pages de politique en 403) ; pas de licence formelle établie [?]. Voir étude §3 |
 | NOAA NCEI Global Hourly | 9 CSV (3 stations × 2023–2025), 63 137 551 octets [V] ; bucket `noaa-global-hourly-pds` (`us-east-1`) | **Ouverte, usage libre, attribution demandée, sans suggérer l'aval de NOAA, sans présenter des données modifiées comme originales** [V : registre AWS NODD, lu le 2026-11-06]. Restriction WMO Rés. 40 : données **non américaines** seulement |
 | Stations | JFK 74486094789 · LGA 72503014732 · EWR 72502014734 | [V] (noms lus dans les fichiers 2024) |
 

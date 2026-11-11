@@ -32,6 +32,7 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 - [x] 2026-11-06 — Étude de faisabilité de l'acquisition : [data-acquisition-study.md](data-acquisition-study.md), [dataset-card.md](dataset-card.md) et [data-dictionary.md](data-dictionary.md) mis à jour, [ADR-0016](05-decisions/adr/0016-dataset-acquisition-strategy.md) proposée — non commité
 
 - [x] 2026-11-06 — **WP0 (local) : T0.1–T0.5 réalisées** — structure du dépôt, `pyproject.toml` (uv), `.gitignore`, `.env.example`, `src/aeropulse/config.py` (seuil 15 min, horizon T-2h, colonnes interdites, stations NOAA, seuil de 30 vols), lint (ruff), typage strict (mypy), 8 tests (pytest), scan de secrets, pre-commit, CI GitHub Actions. Toutes les vérifications locales passent ; la CI n'a pas encore tourné sur GitHub — non commité
+- [x] 2026-11-06 — **T1.1 (code, dry-run)** : `aeropulse.data.manifest` / `aeropulse.data.download` (manifeste, résolution par HEAD, téléchargement atomique avec somme de contrôle, désactivé sans `--execute` ; BTS exige en plus `--accept-bts-licence-risk`). Dry-run réel : **40/40 fichiers résolus** (31 BTS + 9 NOAA), 963 746 371 octets au total, **aucun téléchargement**. Motif des noms BTS établi (sans parenthèses). 15 tests passent
 - Restent en WP0 : T0.6 (AWS Budgets, nécessite un compte AWS), T0.7 (relecture), T0.8 (estimation de coûts, G0)
 
 ## Résultats de l'étude (résumé)
