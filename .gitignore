@@ -1,5 +1,5 @@
 # Données (jamais versionnées : licence, taille) — voir docs/dataset-card.md
-data/
+/data/
 *.parquet
 *.csv
 *.zip
