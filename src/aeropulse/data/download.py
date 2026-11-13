@@ -131,7 +131,9 @@ def format_plan(plan: Sequence[Resolved]) -> str:
         lines.append(f"{r.entry.source:5s} {r.status:>6d} {size:>16s}  {r.entry.name}")
     known = sum(r.size or 0 for r in plan if r.status in (200, 206))
     bad = [r for r in plan if r.status not in (200, 206)]
-    lines.append(f"total connu : {known:,} octets ; fichiers non résolus : {len(bad)}".replace(",", " "))
+    lines.append(
+        f"total connu : {known:,} octets ; fichiers non résolus : {len(bad)}".replace(",", " ")
+    )
     return "\n".join(lines)
 
 
@@ -161,7 +163,10 @@ def main(argv: Sequence[str] | None = None, head: HeadFn = http_head) -> int:
         print("\nArrêt : des fichiers ne sont pas résolus, rien n'est téléchargé.", file=sys.stderr)
         return 1
     if any(r.entry.source == "bts" for r in plan) and not args.accept_bts_licence_risk:
-        print("\nArrêt : BTS exige --accept-bts-licence-risk (décision du propriétaire).", file=sys.stderr)
+        print(
+            "\nArrêt : BTS exige --accept-bts-licence-risk (décision du propriétaire).",
+            file=sys.stderr,
+        )
         return 2
 
     records = [download_one(r, args.raw_dir) for r in plan]

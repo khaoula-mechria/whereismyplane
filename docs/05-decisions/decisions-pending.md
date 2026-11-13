@@ -8,7 +8,7 @@ Nom du projet : **AeroPulse** (anciennement FlightWise). Dataset : **NYC Flight 
 
 | ID | Décision retenue | Statut | ADR | Tâches | FR / AC |
 |---|---|---|---|---|---|
-| D-01 | Option A : dernière observation météo ≤ T-2h ; toute observation postérieure exclue. **Conditionnée** à des horodatages météo permettant de reconstruire T-2h ; sinon blocage signalé, sans donnée artificielle | **Tranchée sous condition** — vérification en attente | [0009](adr/0009-weather-at-t2h.md) | T1.5, T3.4, T3.7 | FR-07 / AC-03, AC-04 |
+| D-01 | Option A : dernière observation météo ≤ T-2h ; toute observation postérieure exclue. **Conditionnée** à des horodatages météo permettant de reconstruire T-2h ; sinon blocage signalé, sans donnée artificielle | **Tranchée sous condition — condition vérifiée le 2026-11-13** (jointure as-of NOAA : 100 % des vols couverts, 0 observation après T-2h, âge médian 24 min ; voir [dataset-card.md](../dataset-card.md) §6) ; seuil d'âge maximal à fixer | [0009](adr/0009-weather-at-t2h.md) | T1.5, T3.4, T3.7 | FR-07 / AC-03, AC-04 |
 | D-02 | Saisie manuelle du vol **et** rejeu d'un vol de la période de test ; météo issue des données historiques disponibles à T-2h | Tranchée (dépend de D-01 pour la météo) | [0013](adr/0013-mvp-api-usage-scope.md) | T7.1, T7.3, T7.7 | FR-14, FR-16 / AC-10 |
 | D-03 | CDK en Python | Tranchée | [0006](adr/0006-cdk-infrastructure-as-code.md) | T6.1 | NFR-02 / AC-12 |
 | D-04 | React + Vite, bibliothèque de graphiques légère (choix précis à T7.5) | Tranchée | [0014](adr/0014-development-tooling.md) | T7.5–T7.7 | FR-16, FR-17 / AC-21 |
@@ -40,7 +40,7 @@ Note : l'arbitrage a d'abord indiqué de ne pas figer région, modèle et budget
 | Information | État | Bloque |
 |---|---|---|
 | Source du dataset | **Identifiée** : Mostly Right (`nyc_flight_delays_ml`) ; sources d'origine BTS et NOAA Global Hourly | — |
-| Fichier complet du dataset | **Non téléchargé** (abonnement refusé) ; remplacé par la reconstruction (D-18) | Approbation de D-18 |
+| Fichier complet du dataset | **Téléchargé le 2026-11-13** par le propriétaire (compte Pro) : `data/raw/nyc_flight_delays_ml.parquet` ; NOAA (9 CSV) téléchargé aussi ; BTS non téléchargé, devenu optionnel (amendement d'ADR-0016) | — |
 | Licence NOAA Global Hourly | **Lue le 2026-11-06** : ouverte, attribution demandée | — |
 | Licence BTS On-Time | **Aucun texte lu** (403), aucune restriction trouvée : **acceptation du risque résiduel par le propriétaire requise** avant le téléchargement complet | T1.1 (AC-23) |
 | Approbation de D-18 (stratégie d'acquisition) et de D-19 (annulés/déroutés) | **Reçue le 2026-11-06** | — |

@@ -1,6 +1,6 @@
 # Fiche du dataset — NYC Flight Delays and Weather (2023–2025)
 
-> Statut : **spécification de référence ; stratégie d'acquisition proposée dans [ADR-0016](05-decisions/adr/0016-dataset-acquisition-strategy.md), en attente d'approbation.** Étude détaillée : [data-acquisition-study.md](data-acquisition-study.md). Dataset initial (Flights & Weather 2022) abandonné ([ADR-0010](05-decisions/adr/0010-dataset-nyc-2023-2025.md)).
+> Statut : **fichier Parquet complet téléchargé (compte Pro du propriétaire) et profilé le 2026-11-13 ; NOAA Global Hourly téléchargé (9 CSV) ; faisabilité de la météo à T-2h confirmée (§6).** Stratégie initiale : [ADR-0016](05-decisions/adr/0016-dataset-acquisition-strategy.md), à amender (source de vols = Parquet, BTS devenu optionnel). Étude détaillée : [data-acquisition-study.md](data-acquisition-study.md). Dataset initial (Flights & Weather 2022) abandonné ([ADR-0010](05-decisions/adr/0010-dataset-nyc-2023-2025.md)).
 
 Légende : **[V]** vérifié (source indiquée) · **[H]** hypothèse · **[?]** non résolu · **[NV]** annoncé, non vérifié.
 
@@ -14,14 +14,18 @@ Légende : **[V]** vérifié (source indiquée) · **[H]** hypothèse · **[?]**
 | Sources d'origine déclarées | BTS On-Time Reporting, NOAA Global Hourly, historique des stations ISD ; OurAirports pour les aéroports | [V] déclaré par l'éditeur |
 | Licence de la table | champ `license` du catalogue : **`null`** ; texte : « government-data public-domain assertions » | [V] ; **licence formelle non établie [?]** |
 | Accès gratuit | échantillon public de 500 lignes ; au-delà : compte (allocation de 100 000 lignes/mois, partagée) ou abonnement | [V] |
-| Téléchargement complet | compte comme lignes lues sur le plan gratuit ; **non retenu** (pas d'abonnement) | [V] / décision du propriétaire |
-| Emplacement local du fichier | aucun fichier complet | — |
+| Téléchargement complet | **effectué** par le propriétaire avec un compte Pro (décision postérieure à l'étude initiale, qui excluait l'abonnement) | [V] |
+| Emplacement local du fichier | `data/raw/nyc_flight_delays_ml.parquet` (27 539 025 octets), non versionné ; conditions de la table : licence `null`, ne pas redistribuer | [V] |
 
 ## 2. Caractéristiques
 
 | Caractéristique | Annoncé (éditeur) | Vérifié par nous | Source de la vérification |
 |---|---|---|---|
-| Nombre de vols | 1 056 897 (moyenne 34 093 par mois) | **Non** [NV] | — (à reconstruire, AC-23) |
+| Nombre de vols | 1 056 897 (moyenne 34 093 par mois) | **Oui : 1 056 897 lignes, 31 mois présents, 0 doublon de clé** [V] | profilage du Parquet, 2026-11-13 |
+| Répartition par aéroport | non annoncée | LGA 403 973 · EWR 335 855 · JFK 317 069 [V] | profilage |
+| Annulés / déroutés / retard nul | non annoncé | 26 495 annulés ; 2 816 déroutés ; 24 920 sans `departure_delay_minutes` [V] | profilage |
+| Retard > 15 / ≥ 15 | non annoncé | 210 344 (> 15) ; 216 201 (≥ 15) ; **5 857 vols à exactement 15 min** : la cible `> 15` doit être recalculée [V] | profilage |
+| Cutoff | T-1h | **exactement 3 600 s pour les 1 056 897 lignes** [V] | profilage |
 | Colonnes | 33 | **Oui, 33 noms et significations** [V] | catalogue public et échantillon |
 | Aéroports d'origine | JFK, EWR, LGA | Oui sur l'échantillon [V] ; ensemble [NV] | échantillon |
 | Fenêtre | 2023-01-01 → 2025-07-31 ; dates en heure de New York, horodatages en UTC | Début : oui sur l'échantillon (2023-01-01) [V] ; fin [NV] | échantillon |
@@ -57,8 +61,9 @@ D-01 reste tranchée **sous condition** (option A : dernière observation ≤ T-
 | Question | Évidence | Statut |
 |---|---|---|
 | Observations avec horodatage propre ? | ISD : `DATE` en CSV, heure d'observation « based on UTC » ; ligne de 00:51 avec METAR « 010051Z » | [V] |
-| Retrouver, pour un vol, la dernière observation ≤ T-2h à l'aéroport de départ ? | Structure des fichiers NOAA le permet (séries horaires par station) ; à exécuter sur les vraies données | [H] jusqu'à T1.5 |
-| Âge acceptable ? | Âge à mesurer sur 2023–2025 ; Mostly Right borne à 3 h pour T-1h | [?] |
+| Retrouver, pour un vol, la dernière observation ≤ T-2h à l'aéroport de départ ? | **Oui.** Jointure as-of (METAR FM-15 + SPECI FM-16) sur 1 027 586 vols non annulés/déroutés : 100 % ont une observation, **0 postérieure au cutoff** (test du 2026-11-13, `aeropulse.data.weather` en UTC) | [V] |
+| Âge acceptable ? | Médiane 24 min ; p99 59 min ; 99,8 % ≤ 60 min ; **398 vols (0,04 %) > 3 h** (dont 234 > 6 h), max 1 069 min (JFK, trou NOAA du 2024-04-02) ; mesure refaite avec `aeropulse.data.weather`, en UTC explicite. Seuil d'âge maximal à décider ; au-delà, météo `NULL` + indicateur, sans valeur inventée | [V] mesure ; seuil [?] |
+| Couverture NOAA | 9 CSV (63 137 551 octets) ; observations de 2023-01-01 à fin août 2025 ; les schémas de colonnes diffèrent selon l'année (lecture par nom de colonne) | [V] |
 | La météo est-elle fournie seulement « au départ » ? | Non pour NOAA (séries) ; oui pour les colonnes du dataset Mostly Right (une valeur par vol) | [V] |
 
 **En cas de blocage** (observations incomplètes, trous excessifs) : signaler dans PROGRESS.md et ADR-0009, **aucune donnée artificielle** ; arbitrage du propriétaire.

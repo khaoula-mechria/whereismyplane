@@ -3,16 +3,16 @@
 > Document vivant : à mettre à jour à la fin de chaque session de travail.
 > Les descriptions des étapes sont dans [ROADMAP.md](ROADMAP.md) : ne pas les dupliquer ici.
 
-**Dernière mise à jour :** 2026-11-06
-**Étape en cours :** Planification — ADR-0016, D-18 et D-19 **approuvées** ; licences lues ; en attente de votre feu vert pour WP0 et le téléchargement
-**Statut :** aucune implémentation ; aucun téléchargement hors échantillon public de 500 lignes ; aucune ressource AWS
+**Dernière mise à jour :** 2026-11-13
+**Étape en cours :** Étape 1 — dataset acquis et profilé ; météo T-2h confirmée faisable ; prochaine tâche : module météo (T1.5) puis pipeline de préparation (WP2)
+**Statut :** Parquet Mostly Right (27 Mo) et NOAA (9 CSV, 63 Mo) téléchargés en local (`data/`, non versionné) ; BTS non téléchargé (optionnel) ; aucune ressource AWS
 **Index de la documentation :** [README.md](README.md)
 
 ## Vue d'ensemble
 
 | Étape | Intitulé | Statut |
 |---|---|---|
-| 1 | Acquérir, explorer et vérifier le dataset | à faire — **bloquée** : approbation de D-18, licences BTS/NOAA à confirmer |
+| 1 | Acquérir, explorer et vérifier le dataset | **en cours** — données téléchargées et profilées ; reste la vérification de licence de la table Mostly Right |
 | 2 | Pipeline de préparation | à faire |
 | 3 | Variables T-2h et cibles | à faire |
 | 4 | Modèles en local | à faire |
@@ -33,6 +33,8 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 
 - [x] 2026-11-06 — **WP0 (local) : T0.1–T0.5 réalisées** — structure du dépôt, `pyproject.toml` (uv), `.gitignore`, `.env.example`, `src/aeropulse/config.py` (seuil 15 min, horizon T-2h, colonnes interdites, stations NOAA, seuil de 30 vols), lint (ruff), typage strict (mypy), 8 tests (pytest), scan de secrets, pre-commit, CI GitHub Actions. Toutes les vérifications locales passent ; la CI n'a pas encore tourné sur GitHub — non commité
 - [x] 2026-11-06 — **T1.1 (code, dry-run)** : `aeropulse.data.manifest` / `aeropulse.data.download` (manifeste, résolution par HEAD, téléchargement atomique avec somme de contrôle, désactivé sans `--execute` ; BTS exige en plus `--accept-bts-licence-risk`). Dry-run réel : **40/40 fichiers résolus** (31 BTS + 9 NOAA), 963 746 371 octets au total, **aucun téléchargement**. Motif des noms BTS établi (sans parenthèses). 15 tests passent
+- [x] 2026-11-13 — **T1.5 (code)** : `aeropulse.data.weather` (lecture NOAA par nom de colonne, décodage ISD, jointure as-of ≤ T-2h, garde-fou anti-fuite, seuil d'âge paramétrable) + `tests/test_weather.py` ; `pandas-stubs` ajouté ; ruff, mypy strict et 21 tests passent. Vérifié sur les vraies données : 1 027 586 vols appariés, 0 fuite, âge médian 24 min, 398 vols > 3 h. Un premier test DuckDB en fuseau local avait légèrement faussé les âges (corrigé) — non commité
+- [x] 2026-11-13 — **Données acquises** : Parquet Mostly Right (compte Pro du propriétaire) profilé (1 056 897 lignes, 2023-01-01 → 2025-07-31, 31 mois, 0 doublon, cutoff exactement T-1h) ; NOAA téléchargé (9 CSV). **Test AC-24 réussi** : jointure as-of à T-2h, 100 % des 1 027 586 vols non annulés/déroutés appariés, 0 observation postérieure, âge médian 24 min, 398 vols > 3 h. Docs mis à jour (dataset-card, D-01, D-18, ADR-0016 amendé) — non commité
 - Restent en WP0 : T0.6 (AWS Budgets, nécessite un compte AWS), T0.7 (relecture), T0.8 (estimation de coûts, G0)
 
 ## Résultats de l'étude (résumé)
@@ -46,10 +48,11 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 
 ## Prochaines actions
 
-1. **Votre décision** : accepter (ou non) le risque résiduel de licence BTS (aucun texte de licence lisible, aucune restriction trouvée) pour autoriser le téléchargement complet (T1.1).
-2. Code T1.1 prêt à écrire (manifeste de sources + téléchargeur avec mode « dry-run ») : non exécuté tant que le point 1 n'est pas tranché.
-3. T0.8 : estimation de coûts (G0) — non bloquée.
-4. Révoquer la clé Mostly Right exposée (voir Sécurité).
+1. **T1.5** : module `aeropulse.data.weather` (lecture NOAA par nom de colonne, décodage TMP/WND/VIS/CIG, contrôle qualité, jointure as-of ≤ T-2h) + tests.
+2. **Décision** : seuil d'âge maximal de la météo (398 vols > 3 h) — proposé : `NULL` + indicateur au-delà du seuil.
+3. **WP2** : pipeline de préparation (cible `> 15` recalculée, exclusion annulés/déroutés D-19, colonnes météo du Parquet exclues, sortie Parquet).
+4. Confirmer les conditions d'usage de la table Mostly Right (`license` null) ; BTS optionnel.
+5. T0.8 : estimation de coûts (G0). Révoquer la clé Mostly Right exposée (voir Sécurité).
 
 ## Blocages et vérifications en attente
 
@@ -57,14 +60,15 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 |---|---|---|
 | Stratégie d'acquisition (D-18) et D-19 | **Approuvées le 2026-11-06** | — |
 | Licence NOAA Global Hourly | **Lue** : ouverte, attribution demandée | Citer NOAA dans les livrables |
-| Licence BTS On-Time | **Aucun texte lu** (pages en 403), aucune restriction trouvée | Acceptation du risque résiduel par le propriétaire (AC-23) |
-| Horodatages météo / T-2h (D-01 sous condition) | **En attente de vérification** | Sur les observations NOAA reconstruites (AC-24) |
-| Couverture NOAA 2025 jusqu'à fin juillet, noms et tailles réels des archives BTS | À mesurer | T1.1–T1.2 |
+| Licence BTS On-Time | Sans objet tant que BTS n'est pas téléchargé (optionnel) | — |
+| Licence de la table Mostly Right | `license` = null ; usage local, pas de redistribution | À confirmer auprès de l'éditeur |
+| Horodatages météo / T-2h (D-01) | **Vérifié le 2026-11-13** | Seuil d'âge maximal à décider |
+| Couverture NOAA 2025 | **Vérifiée** (jusqu'à fin août 2025) | — |
 | Dates exactes du découpage (D-17) | En attente | T3.6 |
 | Modèle Bedrock (D-12c) | **En attente de vérification** | [ADR-0012](05-decisions/adr/0012-bedrock-model-selection.md) |
 | Estimation de coûts vs 100 USD/mois | À produire | Bloque tout déploiement payant (G0) |
 | Date limite, temps disponible, accès à un compte AWS | Non fournis / non confirmés | Calendrier |
-| Environnement Python local | pandas/PyArrow/DuckDB non installés | WP0 (uv) |
+| Environnement Python local | Installé (`uv sync`) | — |
 
 ## Sécurité
 

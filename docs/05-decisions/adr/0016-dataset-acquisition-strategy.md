@@ -2,6 +2,7 @@
 
 - **Statut** : **Acceptée le 2026-11-06** (approbation du propriétaire) ; téléchargement complet conditionné à la lecture des licences
 - **Date** : 2026-11-06
+- **Amendement 2026-11-13** : voir la section « Amendement » en fin de document (source de vols = Parquet Pro ; BTS optionnel)
 - **Décision liée** : D-18 ([decisions-pending.md](../decisions-pending.md))
 - **Complète** : [ADR-0010](0010-dataset-nyc-2023-2025.md), [ADR-0009](0009-weather-at-t2h.md)
 
@@ -56,3 +57,13 @@ Le téléchargement complet de `nyc_flight_delays_ml` (1 056 897 lignes annoncé
 ## Si l'option B échoue
 
 Repli, par ordre : (1) réduire la période (moins de mois) tout en restant chronologique ; (2) sous-ensemble Mostly Right de 100 000 lignes **uniquement** pour développer le pipeline, avec horizon T-1h documenté comme écart à ADR-0003 (décision explicite du propriétaire) ; (3) abonnement ponctuel (décision du propriétaire).
+
+## Amendement (2026-11-13) — proposé, à confirmer par le propriétaire
+
+Le propriétaire a ouvert un compte Pro et téléchargé le Parquet complet (`data/raw/nyc_flight_delays_ml.parquet`, 1 056 897 lignes ; profil dans [dataset-card.md](../../dataset-card.md)). L'option C (abonnement) a donc été exécutée par le propriétaire, ce qui lève la contrainte « pas d'abonnement ».
+
+- **Source de vols** : le Parquet Mostly Right. Les 31 archives BTS (900 Mo, licence non lue) deviennent **optionnelles** (contrôle croisé éventuel) ; leur téléchargement n'est plus nécessaire.
+- **Météo** : inchangée sur le fond. Les colonnes météo du Parquet (cutoff T-1h) sont **exclues des variables** ; la météo vient de NOAA par jointure as-of à T-2h (faisabilité vérifiée, D-01).
+- **Cible** : recalculée `departure_delay_minutes > 15` ; la colonne `departure_delayed_15` (≥ 15) n'est pas utilisée (5 857 vols à exactement 15 min).
+- **Licence** : champ `license` de la table à `null` ; usage local, pas de redistribution du fichier ; à confirmer auprès de l'éditeur.
+- **Conséquence** : ADR-0003 (T-2h) est maintenue sans changement.
