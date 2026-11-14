@@ -1,0 +1,23 @@
+{
+  "note": "S\u00e9lectionn\u00e9s sur la validation (recherche al\u00e9atoire, graine 42, 12 essais) ; test non lu.",
+  "classification": {
+    "max_depth": 4,
+    "learning_rate": 0.1,
+    "min_child_weight": 20,
+    "subsample": 0.85,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 20.0,
+    "scale_pos_weight": 1.0,
+    "n_estimators": 151
+  },
+  "regression": {
+    "objective": "reg:absoluteerror",
+    "max_depth": 4,
+    "learning_rate": 0.1,
+    "min_child_weight": 20,
+    "subsample": 0.85,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 5.0,
+    "n_estimators": 160
+  }
+}

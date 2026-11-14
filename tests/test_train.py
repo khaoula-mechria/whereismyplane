@@ -59,3 +59,21 @@ def test_run_produces_metrics_and_never_reads_test(tmp_path: Path) -> None:
     r2 = train.run(alt, small)
     for key in ("classification", "regression"):
         assert _close(r1[key], r2[key])
+
+
+def test_tuning_selects_on_validation_and_never_reads_test(tmp_path: Path) -> None:
+    from aeropulse.models import tune
+
+    ml = _ml()
+    path = tmp_path / "ml.parquet"
+    ml.to_parquet(path, index=False)
+    r1 = tune.run(path, trials=2, max_trees=15)
+    ml.loc[ml["split"] == "test", "dep_delay"] = 1e6
+    ml.loc[ml["split"] == "test", "is_delayed"] = True
+    alt = tmp_path / "alt.parquet"
+    ml.to_parquet(alt, index=False)
+    r2 = tune.run(alt, trials=2, max_trees=15)
+    for task in ("classification", "regression"):
+        assert r1[task]["best"]["params"] == r2[task]["best"]["params"]
+        assert len(r1[task]["log"]) == 2
+    assert r1["evaluated_on"] == "validation"

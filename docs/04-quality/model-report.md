@@ -72,6 +72,22 @@ Commande : `uv run python -m aeropulse.models.train` (sortie : `data/ml/model_re
 - **Biais optimiste connu** : l'arrêt anticipé de XGBoost et le seuil F1 utilisent la validation ; leurs métriques de validation sont légèrement favorables. L'évaluation finale sur le test sera la mesure sans biais.
 - Les modèles n'ont pas encore de réglage, de gestion explicite du déséquilibre, ni de calibration.
 
-## 5. À venir
+## 5. Réglage sur la validation (T4.4)
 
-T4.4 déséquilibre et réglage sur la validation · T4.5 seuil et métriques complètes · T4.6 évaluation finale unique sur le test · T4.7 SHAP · T4.8 cibles de performance (G3) · T4.9 artefacts.
+Commande : `uv run python -m aeropulse.models.tune` ; recherche aléatoire à graine fixe (42), **12 essais par tâche**, XGBoost, ajustement sur l'entraînement, sélection sur la validation, test non lu. Espace : profondeur 4–10, pas 0,03–0,1, `min_child_weight` 1–50, `subsample` 0,7–1, `colsample_bytree` 0,6–1, `reg_lambda` 1–20 ; pour la classification, aussi `scale_pos_weight` ∈ {1, 2, 4} (déséquilibre). Paramètres retenus : [tuned_params.json](../../src/aeropulse/models/tuned_params.json).
+
+| Tâche | Avant réglage | Meilleur essai | Étendue des 12 essais |
+|---|---|---|---|
+| Classification (PR-AUC) | 0,382 | **0,390** (profondeur 4, pas 0,1, 151 arbres, `scale_pos_weight` = 1) | 0,371 – 0,390 |
+| Régression (MAE, perte absolue) | 18,833 | **18,821** (profondeur 4, pas 0,1, 160 arbres) | 18,821 – 18,983 |
+
+Lecture :
+
+- **Gain de réglage faible** : +0,008 de PR-AUC et −0,012 min de MAE, du même ordre que la dispersion entre essais. Les modèles plafonnent : c'est l'information des variables, pas les hyperparamètres, qui limite la performance.
+- **Les arbres peu profonds gagnent** (profondeur 4 meilleure en classification comme en régression, profondeur 10 la pire) : les modèles profonds sur-ajustent la période d'entraînement, ce qui est cohérent avec la dérive temporelle du retard (R-03).
+- **Déséquilibre** : pondérer la classe minoritaire (`scale_pos_weight` 2 ou 4) n'améliore pas la PR-AUC (le meilleur essai utilise 1). Le déséquilibre (19 % de retards) est modéré ; l'ajustement du seuil F1 (T4.5) suffit à ce stade.
+- **Optimisme** : 12 essais sélectionnés sur la validation, qui sert aussi à l'arrêt anticipé : la valeur de validation du meilleur essai est un peu favorable. Seul le test (T4.6) donnera une mesure sans biais.
+
+## 6. À venir
+
+T4.5 seuil et métriques complètes (calibration, courbes) · T4.6 évaluation finale unique sur le test · T4.7 SHAP · T4.8 cibles de performance (G3) · T4.9 artefacts.
