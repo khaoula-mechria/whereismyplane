@@ -10,6 +10,7 @@ dependencies = [
     "duckdb>=1.0",
     "tzdata",  # fuseau America/New_York sous Windows
     "scikit-learn>=1.9.1",
+    "xgboost>=3.2.0",
 ]
 
 [dependency-groups]
@@ -45,5 +46,5 @@ strict = true
 files = ["src", "tests", "scripts"]
 
 [[tool.mypy.overrides]]
-module = ["sklearn.*"]
+module = ["sklearn.*", "xgboost.*"]
 ignore_missing_imports = true
