@@ -9,7 +9,7 @@ Projet **AeroPulse** (anciennement FlightWise). Statuts : **Confirmé** (arbitr�
 1. Chargement et traitement du dataset historique **NYC Flight Delays and Weather (2023–2025)** ([ADR-0010](../05-decisions/adr/0010-dataset-nyc-2023-2025.md)).
 2. Stockage S3 (raw / processed / analytics) et catalogue Glue.
 3. Analyses SQL avec Athena.
-4. Entraînement et comparaison de modèles de classification et de régression.
+4. Entraînement et comparaison de modèles de classification (la régression est **reportée**, pouvant être ajoutée plus tard : ADR-0017).
 5. Déploiement des modèles validés sur SageMaker (endpoints temporaires).
 6. Exposition des prédictions via API Gateway + Lambda, avec clé d'API.
 7. Tableau de bord web (React + Vite, interface en français).

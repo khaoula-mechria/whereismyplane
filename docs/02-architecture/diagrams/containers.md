@@ -25,7 +25,6 @@ flowchart LR
 
     subgraph ml ["ML"]
         epc["SageMaker<br/>endpoint classification"]
-        epr["SageMaker<br/>endpoint régression"]
         reg["Model Registry"]
         pipe["SageMaker Pipeline"]
     end

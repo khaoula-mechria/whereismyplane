@@ -32,7 +32,7 @@ flowchart LR
 
 - **Acteur** : Utilisateur. **Exigences** : FR-14, FR-16.
 - **Préconditions** : endpoints actifs (voir UC-08).
-- **Scénario nominal** : l'utilisateur renseigne un vol, soit en **saisie manuelle**, soit en **rejouant un vol de la période de test** (D-02, [ADR-0013](../05-decisions/adr/0013-mvp-api-usage-scope.md)) ; le backend valide, complète les variables (météo = dernière observation historique ≤ T-2h, sous condition D-01), appelle classification et régression, renvoie probabilité, décision, minutes estimées et explications.
+- **Scénario nominal** : l'utilisateur renseigne un vol, soit en **saisie manuelle**, soit en **rejouant un vol de la période de test** (D-02, [ADR-0013](../05-decisions/adr/0013-mvp-api-usage-scope.md)) ; le backend valide, complète les variables (météo = dernière observation historique ≤ T-2h, sous condition D-01), appelle le modèle de classification, renvoie probabilité, décision et explications (pas de durée de retard estimée, ADR-0017).
 - **Blocage possible** : si la météo à T-2h ne peut pas être reconstruite ([dataset-card.md](../dataset-card.md)), ce cas d'utilisation ne démarre pas et le blocage est signalé.
 - **Alternatives** : entrée invalide → erreur 400 détaillée ; compagnie ou itinéraire inconnus de l'entraînement → prédiction avec avertissement ou refus (à décider) ; endpoints arrêtés → message de service indisponible.
 - **Exemple de résultat** :
@@ -42,8 +42,7 @@ flowchart LR
   "delay_probability": 0.37,
   "is_delayed_predicted": false,
   "threshold": 0.42,
-  "expected_delay_minutes": 6.4,
-  "model_versions": {"classification": "v3", "regression": "v3"},
+  "model_versions": {"classification": "v3"},
   "explanation": [
     {"feature": "dep_hour", "contribution": 0.08},
     {"feature": "origin_recent_delay_rate", "contribution": 0.05}

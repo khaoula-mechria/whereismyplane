@@ -18,7 +18,7 @@ Principes confirmés : moindre privilège IAM, chiffrement, aucun secret dans le
 | Rôle | Autorisations (résumé) |
 |---|---|
 | Lambda analyse | Athena (workgroup dédié), lecture Glue/S3 des zones processed et analytics, écriture sur athena-results |
-| Lambda prédiction | `sagemaker:InvokeEndpoint` sur les deux endpoints uniquement |
+| Lambda prédiction | `sagemaker:InvokeEndpoint` sur l'endpoint de classification uniquement |
 | Lambda assistant | `bedrock:InvokeModel`/Converse sur le modèle choisi ; invocation des autres Lambdas/outils ; Knowledge Base en lecture si retenue |
 | Rôle d'exécution SageMaker | Lecture `analytics/`, écriture `models/` |
 | Rôle Glue | Lecture raw, écriture processed/analytics |

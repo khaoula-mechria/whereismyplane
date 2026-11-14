@@ -9,7 +9,7 @@ Cadre : région AWS `us-east-1`, budget maximal 100 USD/mois ([ADR-0011](../05-d
 Architecture **serverless orientée données**, en trois couches :
 
 1. **Données** : lac S3 (raw / processed / analytics) + Glue (catalogue, ETL) + Athena (SQL).
-2. **ML** : entraînement et inférence SageMaker, deux modèles indépendants.
+2. **ML** : entraînement et inférence SageMaker, un modèle de classification (la régression est reportée, ADR-0017).
 3. **Application** : API Gateway + Lambda, frontend statique S3 + CloudFront, assistant Bedrock.
 
 L'IA générative suit l'**approche hybride** [Confirmé, [ADR-0001](../05-decisions/adr/0001-hybrid-tool-calling-rag.md)] :
@@ -35,7 +35,7 @@ L'IA générative suit l'**approche hybride** [Confirmé, [ADR-0001](../05-decis
 | Décision | Choix retenu | Alternatives | Raison |
 |---|---|---|---|
 | Entrepôt analytique | S3 + Glue + Athena | Redshift ; RDS/PostgreSQL | Pas de serveur à gérer, coût à la requête, volume modeste. Réévaluer si volume ou fréquence augmentent ([ADR-0002](../05-decisions/adr/0002-s3-glue-athena-parquet.md)) |
-| Hébergement des modèles | Deux endpoints SageMaker **temporaires** (D-07) | Un endpoint multi-modèles ; inférence serverless (à évaluer, T5.7) ; modèle embarqué dans Lambda | Séparation claire, MLOps cohérent ; endpoints supprimés hors démonstration pour tenir 100 USD/mois ([ADR-0007](../05-decisions/adr/0007-sagemaker-two-endpoints.md)) |
+| Hébergement des modèles | Un endpoint SageMaker **temporaire** (D-07, ADR-0017) | Un endpoint multi-modèles ; inférence serverless (à évaluer, T5.7) ; modèle embarqué dans Lambda | Séparation claire, MLOps cohérent ; endpoints supprimés hors démonstration pour tenir 100 USD/mois ([ADR-0007](../05-decisions/adr/0007-sagemaker-two-endpoints.md)) |
 | Intégration du LLM | Tool Calling + RAG | RAG seul ; SQL généré par le LLM | Fiabilité des chiffres, contrôle des accès ([ADR-0008](../05-decisions/adr/0008-llm-no-free-sql.md)) |
 | Orchestration de l'agent | Boucle d'outils dans Lambda (API Converse de Bedrock) [Proposé] | Bedrock Agents ; framework tiers | Contrôle total, tests locaux, peu de dépendances. Bedrock Agents reste une option si la boucle devient complexe |
 | Frontend | SPA React + Vite sur S3 + CloudFront (D-04) | Hébergement serveur (ECS/Amplify) | Moins cher, plus simple (voir [technology-stack.md](technology-stack.md)) |

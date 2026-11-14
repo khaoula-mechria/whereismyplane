@@ -19,7 +19,7 @@ Légende **Disponible à T-2h** : **oui** (connu à T-2h) · **non** (connu apr�
 | 9 | `day_of_week` | entier | Lundi 1 … dimanche 7 | dérivé de `FlightDate` | 0 | oui | variable |
 | 10 | `scheduled_elapsed_minutes` | décimal | Durée de vol programmée (minutes) | BTS `CRSElapsedTime` | 0 | oui | variable |
 | 11 | `distance_miles` | décimal | Distance sans escale (miles) | BTS `Distance` | 0 | oui | variable |
-| 12 | `departure_delay_minutes` | décimal | Retard au départ observé, signé (négatif = en avance) | BTS `DepDelay` | 4 (annulés) | **non** | **cible de régression** ; base de `is_delayed` |
+| 12 | `departure_delay_minutes` | décimal | Retard au départ observé, signé (négatif = en avance) | BTS `DepDelay` | 4 (annulés) | **non** | valeur observée ; base de `is_delayed` ; **n'est plus une cible de régression** (ADR-0017) |
 | 13 | `arrival_delay_minutes` | décimal | Retard à l'arrivée observé, signé | BTS `ArrDelay` | 6 | **non** | interdit |
 | 14 | `departure_delayed_15` | booléen | Départ avec ≥ 15 min de retard | BTS `DepDel15` | 4 | **non** | non utilisé : cible recalculée (`> 15`) |
 | 15 | `arrival_delayed_15` | booléen | Arrivée avec ≥ 15 min de retard | BTS `ArrDel15` | 6 | **non** | interdit |

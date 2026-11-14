@@ -9,7 +9,7 @@ Format : chaque critère est vérifiable (test automatique ou contrôle manuel d
 | AC-03 | FR-06, FR-07 | Aucune colonne de la liste interdite (heure réelle de départ, retard réel, informations d'arrivée, météo postérieure à T-2h) n'est dans les variables ; le test de non-fuite échoue si on en ajoute une | Test automatique |
 | AC-04 | FR-07 | Toute statistique historique d'un vol est calculée uniquement avec des vols dont l'heure de départ est antérieure à T-2h de ce vol | Test sur cas construits |
 | AC-05 | FR-08, FR-09 | Le meilleur modèle de classification dépasse la baseline sur PR-AUC (jeu de test chronologique) ; cible chiffrée fixée après l'étape 4 | Rapport d'évaluation |
-| AC-06 | FR-08, FR-09 | Le meilleur modèle de régression bat la baseline (moyenne/médiane) en MAE sur le jeu de test ; cible chiffrée fixée après l'étape 4 | Rapport d'évaluation |
+| AC-06 | — | **Suspendu le 2026-11-14 (ADR-0017)** : modèle de régression reporté ; critère à rétablir si la régression est ajoutée. Historique : MAE 22,06 min contre 22,17 min pour la meilleure baseline sur le test, écart non significatif | — |
 | AC-07 | FR-10 | Le seuil de décision est choisi sur la validation et documenté ; le jeu de test n'est utilisé qu'une fois pour l'évaluation finale | Revue du notebook/rapport |
 | AC-08 | FR-11 | Une prédiction renvoie au moins 3 contributions SHAP ; le texte de l'interface indique « influence, pas cause » | Test API + contrôle visuel |
 | AC-09 | FR-12 | Un modèle n'est enregistré que si ses métriques passent le contrôle de qualité ; version et métriques consultables dans le registry | Exécution du pipeline |

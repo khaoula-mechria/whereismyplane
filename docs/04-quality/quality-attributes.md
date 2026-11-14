@@ -26,6 +26,6 @@ Chaque attribut est relié à une exigence, une tactique d'architecture et une v
 | Coût vs disponibilité | Endpoints non permanents : disponibilité réduite acceptée, message 503 explicite |
 | Simplicité vs sécurité d'accès | Clé d'API + limitation de débit, sans comptes (D-05) |
 | Richesse de l'assistant vs fiabilité | Sept outils fermés plutôt qu'un accès libre aux données |
-| Précision vs interprétabilité | Comparer régression logistique/linéaire et arbres ; choisir sur métriques et lisibilité des explications |
+| Précision vs interprétabilité | Comparer régression logistique et arbres ; choisir sur métriques et lisibilité des explications |
 | Fraîcheur vs reproductibilité | Données historiques figées (dataset NYC 2023–2025, période exacte à vérifier), assumé et affiché |
 | Fonctionnalités vs budget | Plafond de 100 USD/mois : endpoints temporaires, RAG optionnel, assistant à jetons plafonnés |

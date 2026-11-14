@@ -54,7 +54,7 @@ Documentation de planification et de conception. Les décisions D-01 à D-17 ont
 ### 05 — Décisions
 | Document | Contenu |
 |---|---|
-| [adr/](05-decisions/adr/README.md) | ADR-0001…0016 |
+| [adr/](05-decisions/adr/README.md) | ADR-0001…0017 |
 | [decisions-pending.md](05-decisions/decisions-pending.md) | Registre D-01…D-19 : statuts, blocages, traçabilité |
 
 ### Pilotage et données

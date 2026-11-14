@@ -1,5 +1,7 @@
 # Maîtrise et estimation des coûts
 
+> **Mise à jour du 2026-11-14 (ADR-0017) : un seul endpoint (classification) tant que la régression est reportée.** Un second endpoint ajouterait environ 0,92 USD (nominal) à 19,32 USD (oublié une semaine) par mois.** Les totaux ci-dessous sont recalculés pour un endpoint ; le coût d'entraînement est conservé tel quel (prudent).
+>
 > Statut : **estimation réalisée le 2026-11-14 à partir des tarifs officiels `us-east-1` (AWS Price List) — en attente d'approbation du propriétaire (G0).** Les tarifs sont relevés, les volumes d'usage sont des **hypothèses** à valider ; les postes non relevés sont signalés. Contrainte validée : **budget maximal 100 USD/mois** (développement et démonstrations), région `us-east-1` ([ADR-0011](../05-decisions/adr/0011-region-budget-cost-guardrails.md)).
 
 ## 1. Règle d'or
@@ -56,7 +58,7 @@ Source : fichiers publics AWS Price List (`pricing.us-east-1.amazonaws.com/offer
 | Exécutions Glue (0,5 h, 2 DPU) | 4 / mois | 20 / mois |
 | Données analysées par Athena | 2 Go | 50 Go |
 | Entraînements SageMaker (ml.m5.xlarge) | 4 × 0,5 h | 20 × 1 h |
-| Endpoints (2 × ml.m5.large) | 8 h de démonstration chacun | **oubliés une semaine** (168 h chacun) |
+| Endpoint (1 × ml.m5.large) | 8 h de démonstration | **oublié une semaine** (168 h) |
 | Requêtes API (1 s, 1 Go de Lambda) | 20 000 | 200 000 |
 | Logs CloudWatch | 2 Go, 5 alarmes | 10 Go, 5 alarmes |
 | Secrets | 2 | 2 |
@@ -70,31 +72,31 @@ Source : fichiers publics AWS Price List (`pricing.us-east-1.amazonaws.com/offer
 | Glue | 1,76 | 8,80 |
 | Athena | 0,01 | 0,25 |
 | SageMaker — entraînement | 0,46 | 4,60 |
-| SageMaker — endpoints | 1,84 | **38,64** |
+| SageMaker — endpoint | 0,92 | **19,32** |
 | Lambda | 0,34 | 3,37 |
 | API Gateway (REST) | 0,07 | 0,70 |
 | CloudWatch | 1,56 | 5,80 |
 | Secrets Manager | 0,80 | 0,80 |
-| **Sous-total hors Bedrock** | **6,95** | **63,08** |
+| **Sous-total hors Bedrock** | **6,03** | **43,76** |
 | Bedrock, modèle de classe Haiku 5.5 | 0,58 | 16,50 |
 | Bedrock, modèle de classe Sonnet 5.5 | 11,55 | **330,00** |
-| **Total avec Haiku** | **7,53** | **79,58** |
-| **Total avec Sonnet** | **18,50** | **393,08** |
+| **Total avec Haiku** | **6,61** | **60,26** |
+| **Total avec Sonnet** | **17,58** | **373,76** |
 
-Cas extrême (endpoints oubliés **tout le mois**, 2 × 730 h) : 167,90 USD pour les seuls endpoints, 208,84 USD au total avec Haiku, hors budget.
+Cas extrême (endpoint oublié **tout le mois**, 730 h) : 83,95 USD pour le seul endpoint, 124,89 USD au total avec Haiku, hors budget.
 
 ## 6. Comparaison à 100 USD/mois et conclusion proposée (G0 : décision du propriétaire)
 
 | Question | Réponse chiffrée |
 |---|---|
-| Le scénario nominal tient-il ? | **Oui** : 7,53 USD (Haiku) ou 18,50 USD (Sonnet) |
-| Le scénario pessimiste tient-il ? | **Avec un modèle de classe Haiku : oui** (79,58 USD, marge de 20 USD). **Avec un modèle de classe Sonnet : non** (393 USD) : le volume de conversations pessimiste coûte 330 USD |
-| Les endpoints permanents tiennent-ils ? | **Non** : deux ml.m5.large permanents coûtent environ 168 USD/mois, plus que le budget entier |
-| Qu'est-ce qui domine le risque ? | Les endpoints SageMaker oubliés, puis le volume de jetons Bedrock avec un modèle cher |
+| Le scénario nominal tient-il ? | **Oui** : 6,61 USD (Haiku) ou 17,58 USD (Sonnet) |
+| Le scénario pessimiste tient-il ? | **Avec un modèle de classe Haiku : oui** (60,26 USD, marge de 40 USD). **Avec un modèle de classe Sonnet : non** (374 USD) : le volume de conversations pessimiste coûte 330 USD |
+| Un endpoint permanent tient-il ? | **À peine, et sans marge** : un ml.m5.large permanent coûte environ 84 USD/mois (730 h × 0,115 USD), soit 84 % du budget ; avec le reste, le total dépasse 100 USD |
+| Qu'est-ce qui domine le risque ? | Le volume de jetons Bedrock avec un modèle cher, puis un endpoint SageMaker oublié |
 
 Conditions proposées pour lever G0 (à approuver ou amender par le propriétaire) :
 
-1. **Aucun endpoint permanent.** Endpoints créés pour une démonstration puis supprimés (D-07), checklist exécutée à chaque session ; à comparer à l'**inférence serverless** (par exemple 3 Go à 0,00006 USD/s : 1,20 USD pour 20 000 requêtes d'une seconde, 12 USD pour 200 000). La compatibilité du serverless avec un script d'inférence personnalisé (prédiction + SHAP) **n'est pas vérifiée**.
+1. **Aucun endpoint permanent** (même avec un seul, ADR-0017). Endpoints créés pour une démonstration puis supprimés (D-07), checklist exécutée à chaque session ; à comparer à l'**inférence serverless** (par exemple 3 Go à 0,00006 USD/s : 1,20 USD pour 20 000 requêtes d'une seconde, 12 USD pour 200 000). La compatibilité du serverless avec un script d'inférence personnalisé (prédiction + SHAP) **n'est pas vérifiée**.
 2. **Modèle Bedrock de classe économique** par défaut, choix final dans ADR-0012 après vérification de disponibilité, Tool Calling et français.
 3. **Plafonds applicatifs de jetons et de conversations** (limitation de débit, boucle d'outils bornée) : sans eux, un modèle plus cher fait dépasser le budget en usage intensif.
 4. **Les alertes AWS Budgets ne coupent pas les dépenses** : elles ne protègent pas contre l'oubli d'un endpoint ; seule la discipline de suppression le fait.

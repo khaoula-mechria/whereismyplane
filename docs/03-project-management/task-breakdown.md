@@ -72,10 +72,10 @@ Détail et conditions dans [decisions-pending.md](../05-decisions/decisions-pend
 |---|---|---|---|---|---|
 | T4.1 | Baselines (prévalence/majorité ; médiane ; heuristique aéroport × heure) | T3.8 | P0 | Métriques | Référence chiffrée |
 | T4.2 | Classification : régression logistique, Random Forest, XGBoost | T4.1 | P0 | Modèles | FR-08 |
-| T4.3 | Régression : linéaire, Random Forest, XGBoost | T4.1 | P0 | Modèles | FR-08 |
+| T4.3 | ~~Régression : linéaire, Random Forest, XGBoost~~ — **reportée (ADR-0017)** ; essais conservés ; à rouvrir si la régression est ajoutée | T4.1 | — | — | — |
 | T4.4 | Gestion du déséquilibre et réglage sur la validation | T4.2, T4.3 | P1 | Paramètres | Pas de réglage sur le test |
 | T4.5 | Métriques complètes ; choix du seuil sur la validation (D-08) | T4.4 | P0 | Rapport | FR-09, FR-10, AC-07 |
-| T4.6 | Évaluation finale sur le test (une seule fois) ; erreurs par segment | T4.5 | P0 | Rapport | AC-05, AC-06 |
+| T4.6 | Évaluation finale sur le test (une seule fois) ; erreurs par segment | T4.5 | P0 | Rapport | AC-05 (AC-06 suspendu) |
 | T4.7 | SHAP global et local | T4.6 | P0 | Graphiques + fonction | FR-11 |
 | T4.8 | Fixer les cibles de performance (D-10) ; rapport de modélisation | T4.6 | P0 | Document | **G3** |
 | T4.9 | Sauvegarde des artefacts ; bibliothèque `features/` partagée entraînement/service | T4.6 | P0 | Artefacts | R-18 |
@@ -89,7 +89,7 @@ Détail et conditions dans [decisions-pending.md](../05-decisions/decisions-pend
 | T5.3 | Pipeline : préparation → entraînement → évaluation → condition → enregistrement | T5.1, T0.6 | P0 | Définition de pipeline | FR-12 |
 | T5.4 | Seuils de qualité dans la condition (D-10) | T4.8, T5.3 | P0 | Condition | AC-09 |
 | T5.5 | Model Registry avec approbation manuelle | T5.3 | P0 | Groupe de modèles | AC-09 |
-| T5.6 | Déployer les deux endpoints et tester l'invocation | T5.5 | P0 | Endpoints | FR-13 |
+| T5.6 | Déployer l'endpoint de classification et tester l'invocation | T5.5 | P0 | Endpoint | FR-13 |
 | T5.7 | Procédure d'arrêt/suppression des endpoints ; évaluer l'inférence serverless (D-07) en mesurant coût et limites réels, sans les supposer | T5.6 | P1 | Procédure + note | AC-18 |
 
 ## WP6 — Infrastructure CDK (étape 6, ≈ 6 j)
@@ -111,7 +111,7 @@ Détail et conditions dans [decisions-pending.md](../05-decisions/decisions-pend
 |---|---|---|---|---|---|
 | T7.1 | Spécification OpenAPI selon D-02, D-05, D-09, D-13 (tranchées) ; confirmer la langue de l'interface (français, U-09) | T0.7 | P0 | Spécification | [api-design.md](../02-architecture/api-design.md) à jour |
 | T7.2 | `/meta` et `/stats/*` via les outils d'analyse | T2.7, T6.5 | P0 | Lambdas | AC-13 |
-| T7.3 | `/predict` : deux modes (saisie manuelle, rejeu d'un vol de test), validation, variables, appel des endpoints, fusion ; mode dépendant de la météo bloqué si AC-24 non satisfait | T5.6, T4.9, T1.5 | P0 | Lambda | AC-10 |
+| T7.3 | `/predict` : deux modes (saisie manuelle, rejeu d'un vol de test), validation, variables, appel de l'endpoint de classification ; mode dépendant de la météo bloqué si AC-24 non satisfait | T5.6, T4.9, T1.5 | P0 | Lambda | AC-10 |
 | T7.4 | Clé d'API, limitation de débit (protection du budget), CORS, erreurs communes, identifiant de corrélation | T7.2 | P1 | Configuration | AC-19, AC-20 |
 | T7.5 | Squelette du frontend et `FrontendStack` | T7.1, T6.1 | P1 | Site déployé | Page servie via CloudFront |
 | T7.6 | Dashboard de statistiques | T7.2, T7.5 | P1 | Pages | FR-17 |
@@ -155,7 +155,7 @@ Détail et conditions dans [decisions-pending.md](../05-decisions/decisions-pend
 | FR-03 | T6.2, T6.3 | AC-01, AC-12 (parité de lecture via Athena en T6.3) |
 | FR-04, IR-01 | T2.6, T2.7 | AC-13 |
 | FR-06, FR-07 | T3.1–T3.8 | AC-03, AC-04 |
-| FR-08, FR-09, FR-10 | T4.1–T4.6 | AC-05, AC-06, AC-07 |
+| FR-08, FR-09, FR-10 | T4.1–T4.6 | AC-05, AC-07 (AC-06 suspendu, ADR-0017) |
 | FR-11 | T4.7, T5.2 | AC-08 |
 | FR-12, FR-13 | T5.3–T5.6 | AC-09 |
 | FR-14, FR-16 | T7.3, T7.7 | AC-10 |

@@ -20,20 +20,20 @@ Priorités : **M** = MVP, **O** = optionnel. Les identifiants sont repris dans [
 
 | ID | Exigence | Prio |
 |---|---|---|
-| FR-06 | Construire le jeu ML avec cibles `is_delayed` (`dep_delay > 15`) et `dep_delay` (négatifs conservés) | M |
+| FR-06 | Construire le jeu ML avec la cible `is_delayed` (`dep_delay > 15`) ; `dep_delay` (négatifs conservés) reste une valeur observée pour les statistiques, pas une cible (ADR-0017) | M |
 | FR-07 | N'utiliser que des variables disponibles à T-2h (météo : dernière observation ≤ T-2h, sous condition FR-27) ; statistiques historiques calculées sur les vols antérieurs uniquement ; découpage chronologique adapté à la période réelle du dataset (D-17) | M |
-| FR-08 | Entraîner et comparer trois modèles par tâche, contre une baseline | M |
-| FR-09 | Produire les métriques : Precision, Recall, F1, ROC-AUC, PR-AUC ; MAE, RMSE, R² | M |
+| FR-08 | Entraîner et comparer trois modèles de **classification** contre une baseline (pas de régression, [ADR-0017](../05-decisions/adr/0017-regression-postponed.md)) | M |
+| FR-09 | Produire les métriques de classification : Precision, Recall, F1, ROC-AUC, PR-AUC, Brier, calibration | M |
 | FR-10 | Choisir le seuil de décision sur la validation en privilégiant le F1-score et en examinant le rappel (D-08, [ADR-0015](../05-decisions/adr/0015-classification-threshold-selection.md)) | M |
 | FR-11 | Produire des explications SHAP par prédiction (top-k variables) et globales | M |
 | FR-12 | Enregistrer les modèles validés dans le Model Registry avec leurs métriques | M |
-| FR-13 | Déployer un endpoint de classification et un de régression, et pouvoir les supprimer | M |
+| FR-13 | Déployer un endpoint de classification, et pouvoir le supprimer | M |
 
 ### Application
 
 | ID | Exigence | Prio |
 |---|---|---|
-| FR-14 | `POST /predict` : accepter une saisie manuelle du vol **ou** le rejeu d'un vol de la période de test (D-02) ; valider l'entrée, appeler les deux modèles, renvoyer probabilité, décision, minutes estimées, explications | M |
+| FR-14 | `POST /predict` : accepter une saisie manuelle du vol **ou** le rejeu d'un vol de la période de test (D-02) ; valider l'entrée, appeler le modèle de classification, renvoyer probabilité, décision, explications (aucune durée de retard estimée, ADR-0017) | M |
 | FR-15 | Endpoints de statistiques : global, aéroport, compagnie, itinéraire, avec filtres de période | M |
 | FR-16 | Formulaire de prédiction dans l'interface | M |
 | FR-17 | Tableau de bord : indicateurs globaux, graphiques par compagnie, aéroport, itinéraire | M |

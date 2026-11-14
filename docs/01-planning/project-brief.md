@@ -11,13 +11,13 @@ AeroPulse répond à quatre questions :
 | Question | Réponse apportée |
 |---|---|
 | Ce vol sera-t-il en retard de plus de 15 minutes ? | Classification (probabilité + décision) |
-| De combien de minutes sera-t-il en retard ? | Régression (`dep_delay`, négatif = avance) |
+| De combien de minutes sera-t-il en retard ? | **Reporté** : la régression est suspendue ([ADR-0017](../05-decisions/adr/0017-regression-postponed.md)), peu informative à T-2h avec les variables actuelles ; peut être ajoutée plus tard |
 | Pourquoi cette prédiction ? | Explications SHAP (influence, pas causalité) |
 | Que disent les données sur une compagnie, un aéroport, un itinéraire ? | Statistiques calculées par Athena, présentées par un tableau de bord et un assistant |
 
 ## 2. Solution en une phrase
 
-Une plateforme AWS qui combine un lac de données (S3/Glue/Athena), deux modèles ML déployés sur SageMaker, une API (API Gateway + Lambda), un tableau de bord web et un assistant conversationnel Bedrock fondé sur **Tool Calling + RAG** [Confirmé].
+Une plateforme AWS qui combine un lac de données (S3/Glue/Athena), un modèle de classification déployé sur SageMaker, une API (API Gateway + Lambda), un tableau de bord web et un assistant conversationnel Bedrock fondé sur **Tool Calling + RAG** [Confirmé].
 
 ## 3. Contexte et nature du projet
 
@@ -47,7 +47,7 @@ Détail dans [scope-and-constraints.md](scope-and-constraints.md).
 ## 6. Résultats attendus
 
 1. Un jeu de données propre et catalogué, sans fuite temporelle (T-2h).
-2. Deux modèles évalués contre une baseline, expliqués par SHAP.
+2. Un modèle de classification évalué contre une baseline, expliqué par SHAP.
 3. Une application web déployée par code (CDK), arrêtable pour limiter les coûts.
 4. Un assistant qui ne répond avec des chiffres que s'ils proviennent d'un outil, en citant source et période.
 

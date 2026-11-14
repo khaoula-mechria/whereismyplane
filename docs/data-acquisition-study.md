@@ -236,7 +236,7 @@ flowchart LR
 | Tâche | Verdict | Conditions |
 |---|---|---|
 | Classification `dep_delay > 15` | **Oui** (signal et étiquettes disponibles, ordre de grandeur du million de vols annoncé, non vérifié) | Cible recalculée ; exclusion/gestion des annulés ; PR-AUC et seuil sur validation (ADR-0015) |
-| Régression `dep_delay` (minutes, négatifs conservés) | **Oui** | Distribution lourde à droite à documenter ; MAE/RMSE ; baselines |
+| Régression `dep_delay` (minutes, négatifs conservés) | Réalisable techniquement ; **reportée le 2026-11-14** ([ADR-0017](05-decisions/adr/0017-regression-postponed.md)) après mesure : gain non établi sur le test | — |
 | Contrat T-2h | **Oui** avec observations ≤ T-2h | AC-24 |
 | Objectif « prévision » météo | **Non** dans le MVP | Extension |
 

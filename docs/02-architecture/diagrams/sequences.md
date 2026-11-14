@@ -11,7 +11,6 @@ sequenceDiagram
     participant AG as API Gateway
     participant LP as Lambda prédiction
     participant SC as Endpoint classification
-    participant SR as Endpoint régression
     participant CW as CloudWatch
 
     U->>FE: Renseigne le vol
@@ -22,14 +21,9 @@ sequenceDiagram
         LP-->>AG: 400 invalid_parameter
     else entrée valide
         LP->>LP: Construit les variables T-2h
-        par en parallèle
-            LP->>SC: InvokeEndpoint
-            SC-->>LP: probabilité + SHAP
-        and
-            LP->>SR: InvokeEndpoint
-            SR-->>LP: minutes estimées
-        end
-        LP->>LP: Applique le seuil, fusionne
+        LP->>SC: InvokeEndpoint
+        SC-->>LP: probabilité + SHAP
+        LP->>LP: Applique le seuil
         LP-->>AG: 200 + prédiction + explications
     end
     LP->>CW: log (correlation_id, durée)
@@ -97,7 +91,7 @@ sequenceDiagram
     participant EP as Endpoints
 
     M->>PL: Lance le pipeline
-    PL->>TR: entraîne classification et régression
+    PL->>TR: entraîne la classification
     TR-->>PL: modèles
     PL->>EV: métriques sur validation et test chronologiques
     EV-->>PL: métriques + seuil

@@ -50,7 +50,7 @@ Deux modes d'entrée (D-02, tranchée) :
 
 Dans les deux cas, la météo est la dernière observation historique ≤ T-2h (D-01). Si la reconstruction est impossible pour le dataset ([dataset-card.md](../dataset-card.md)), la route répond `503 weather_unavailable` ou le mode est désactivé ; aucune météo n'est inventée. En saisie manuelle, l'origine doit appartenir à la liste d'aéroports du dataset vérifié (`/v1/meta`).
 
-Sortie : voir l'exemple de [use-cases.md](../01-planning/use-cases.md#uc-02--prédire-un-retard) (champs `delay_probability`, `is_delayed_predicted`, `threshold`, `expected_delay_minutes`, `model_versions`, `explanation`, `disclaimer`).
+Sortie : voir l'exemple de [use-cases.md](../01-planning/use-cases.md#uc-02--prédire-un-retard) (champs `delay_probability`, `is_delayed_predicted`, `threshold`, `model_versions`, `explanation`, `disclaimer`).
 
 ### `POST /v1/chat`
 

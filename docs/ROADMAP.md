@@ -60,8 +60,8 @@
 - **Résultat attendu** : modèles et métriques de référence.
 - **Critères de fin** :
   - classification : régression logistique, Random Forest, XGBoost ;
-  - régression : linéaire, Random Forest, XGBoost ;
-  - métriques : Precision, Recall, F1, ROC-AUC, PR-AUC ; MAE, RMSE, R² ;
+  - régression : reportée, pouvant être ajoutée plus tard ([ADR-0017](05-decisions/adr/0017-regression-postponed.md)) ;
+  - métriques : Precision, Recall, F1, ROC-AUC, PR-AUC, Brier ;
   - comparaison à une baseline simple ;
   - explications SHAP produites pour le meilleur modèle.
 
@@ -72,7 +72,7 @@
 - **Critères de fin** :
   - pipeline : préparation, entraînement, métriques, contrôle qualité ;
   - modèles validés enregistrés dans le Model Registry ;
-  - deux endpoints (classification, régression) déployables et supprimables.
+  - un endpoint de classification déployable et supprimable.
 
 ### Étape 6 — Infrastructure avec CDK
 - **Où** : AWS

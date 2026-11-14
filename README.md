@@ -22,7 +22,7 @@ Les prédictions reposent sur des données historiques : elles ne décrivent **p
 
 ## Architecture en bref
 
-S3 + Glue + Athena (données) → SageMaker (classification et régression) → API Gateway + Lambda → frontend React (S3 + CloudFront) → assistant Bedrock. Infrastructure en AWS CDK (Python), région `us-east-1`, **budget maximal 100 USD/mois**. Développement **local d'abord**, AWS ensuite, après estimation des coûts.
+S3 + Glue + Athena (données) → SageMaker (classification) → API Gateway + Lambda → frontend React (S3 + CloudFront) → assistant Bedrock. Infrastructure en AWS CDK (Python), région `us-east-1`, **budget maximal 100 USD/mois**. Développement **local d'abord**, AWS ensuite, après estimation des coûts.
 
 ## Documentation
 

@@ -45,9 +45,7 @@ flowchart LR
     in["Entrée utilisateur"] --> val["Validation<br/>listes blanches"]
     val --> fe["Construction des variables<br/>(même code qu'à l'entraînement)"]
     fe --> c["Classification"]
-    fe --> r["Régression"]
-    c --> merge["Fusion + SHAP + versions"]
-    r --> merge
+    c --> merge["Seuil + SHAP + version"]
     merge --> out["Réponse"]
 ```
 

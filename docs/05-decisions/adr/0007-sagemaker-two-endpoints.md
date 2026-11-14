@@ -1,6 +1,6 @@
-# ADR-0007 — Deux modèles, deux endpoints SageMaker
+# ADR-0007 — Endpoints SageMaker temporaires (initialement : deux modèles, deux endpoints)
 
-- **Statut** : Acceptée — deux endpoints (synthèse), SHAP dans l'inférence (D-06 tranchée), endpoints temporaires (D-07 tranchée). L'**évaluation de l'inférence serverless** reste à faire (T5.7)
+- **Statut** : Acceptée, **modifiée par [ADR-0017](0017-regression-postponed.md) (2026-11-14) : un seul modèle, donc un seul endpoint de classification** ; le texte ci-dessous décrit le plan initial à deux endpoints. Acceptée — deux endpoints (synthèse), SHAP dans l'inférence (D-06 tranchée), endpoints temporaires (D-07 tranchée). L'**évaluation de l'inférence serverless** reste à faire (T5.7)
 - **Date** : 2026-11-05 (formalisation)
 
 ## Contexte

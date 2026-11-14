@@ -185,6 +185,46 @@ Modèles, hyperparamètres et seuil (0,200) **figés avant** (T4.4–T4.5, empre
 - Météo : dernière observation ≤ T-2h, pas une prévision ; aucune information sur l'avion précédent ni la congestion.
 - Résultats rétrospectifs sur données historiques, **pas une prédiction en temps réel**.
 
-## 9. À venir
+## 9. Décision sur la régression (2026-11-14)
 
-T4.8 cibles de performance (D-10) et rapport de modélisation (G3) · T4.9 artefacts et bibliothèque `features/` partagée · décision sur l'avenir de la régression (voir PROGRESS).
+À la lecture du §8, le propriétaire a décidé de **reporter le modèle de régression** (il pourra être ajouté plus tard) ([ADR-0017](../05-decisions/adr/0017-regression-postponed.md), D-21) : gain en MAE non établi sur le test, erreur médiane plus mauvaise que la baseline. Les résultats de régression des §2, §3, §5, §6 et §8 sont conservés comme **trace de recherche** ; seuls le modèle de classification, son seuil (0,200) et ses explications SHAP sont des livrables. AC-06 est suspendu.
+
+## 10. Synthèse G3 et cibles de qualité (T4.8) — **approuvées par le propriétaire le 2026-11-14**
+
+### Synthèse des mesures (classification, modèle figé)
+
+| Mesure | Validation | Test (usage unique) | Baseline (test) |
+|---|---|---|---|
+| PR-AUC | 0,390 | **0,415** (IC 95 % 0,410–0,420) | 0,309 |
+| ROC-AUC | 0,720 | 0,719 | 0,659 |
+| F1 au seuil 0,200 | 0,429 | 0,447 | 0,419 |
+| Précision / rappel | 0,346 / 0,566 | 0,324 / 0,719 | 0,298 / 0,710 |
+| Calibration (prédit − observé) | −1,2 pt | +1,2 pt | — |
+| Brier | 0,138 | 0,149 | — |
+
+### Verdict G3 (approuvé : go pour la classification) (« les modèles battent-ils la baseline de façon significative ? »)
+
+**Oui pour la classification** : +0,106 de PR-AUC sur le test (+34 %), intervalle de confiance entièrement au-dessus de la baseline, avantage confirmé sur la validation (+0,111). **Non pour la régression** (gain de 0,5 % non établi), déjà reportée (ADR-0017). Réserve à retenir : la valeur absolue reste modeste (ROC-AUC 0,72, environ 2 alertes sur 3 fausses à ce seuil) ; le produit est un **indicateur de risque**, pas une prédiction fiable vol par vol. Le go/no-go est **la décision du propriétaire**.
+
+### Cibles de qualité (D-22, approuvée ; `config.QUALITY_*`, contrôle `models/quality.py`, AC-09)
+
+Un modèle de classification n'est enregistré dans le Model Registry que si, sur le jeu d'évaluation du pipeline, **toutes** les conditions suivantes sont vraies :
+
+| Condition | Seuil proposé | Valeur mesurée (test) | Marge |
+|---|---|---|---|
+| Gain de PR-AUC sur la baseline aéroport × heure | ≥ +0,05 | +0,106 | ×2 |
+| ROC-AUC | ≥ 0,65 | 0,719 | +0,07 |
+| Calibration : \|probabilité moyenne prédite − fréquence observée\| | ≤ 0,03 | 0,012 | ×2,5 |
+| Tests de non-fuite (colonnes interdites, météo > T-2h, historique) | tous verts | verts | — |
+
+Justification : les seuils sont fixés **sous** les valeurs mesurées (marge de sécurité pour la dérive d'une période à l'autre : la calibration a changé de signe entre validation et test) mais **bien au-dessus** de la baseline et du hasard. Ils sont relatifs à la baseline recalculée sur le même jeu pour ne pas dépendre de la prévalence. À réviser après les premiers réentraînements réels. Les objectifs de latence (D-10 : p95 `/predict` < 3 s, `/stats` < 10 s) restent provisoires et se mesurent en T7.8.
+
+## 11. Artefacts et prédicteur partagé (T4.9)
+
+Commande : `uv run python -m aeropulse.models.release` → `data/ml/release/` (non versionné) : `classifier.json`, `meta.json` (variables, catégories, seuil, paramètres ; sans régression), `manifest.json` (SHA-256, **version `clf-f25ebbd328c5`**, seuil 0,2001). L'empreinte du classifieur est identique à celle enregistrée par l'évaluation finale sur le test : c'est le modèle évalué. Le régresseur n'est pas exporté (ADR-0017).
+
+`aeropulse.models.predict.Predictor` charge l'export et applique **le même code de variables que l'entraînement** (`train.features`) : probabilité, décision au seuil figé, version, explications SHAP (≥ 3 contributions, « influence, pas cause »). **Parité vérifiée sur 20 000 vols de validation : écart maximal 0,0** avec le chemin d'entraînement (risque R-18 couvert côté modèle). Le contrôle de contrat refuse un modèle dont les variables diffèrent de `config.FEATURE_COLUMNS`.
+
+## 12. À venir
+
+WP5 (SageMaker), conditionné à **G0** (approbation de l'estimation de coûts) · construction des variables pour un vol saisi (météo ≤ T-2h et historique) dans le service de prédiction (T7.3) · relecture de non-fuite avant G2 (T0.7).

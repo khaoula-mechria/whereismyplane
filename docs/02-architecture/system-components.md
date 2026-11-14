@@ -32,7 +32,7 @@ tests/
 | CMP-06 | Entraînement et évaluation | Entraîner 3 modèles par tâche, métriques, choix du seuil | ML dataset → modèles + rapport | scikit-learn, XGBoost ; SageMaker en cloud | FR-08 à FR-10 |
 | CMP-07 | Explicabilité | Valeurs SHAP par prédiction et globales | modèle + entrée → contributions | SHAP | FR-11 |
 | CMP-08 | Pipeline MLOps | Orchestrer préparation, entraînement, contrôle qualité, enregistrement | ML dataset → Model Registry | SageMaker Pipelines | FR-12 |
-| CMP-09 | Endpoints d'inférence | Servir classification et régression (+ explications) | variables → prédiction | SageMaker | FR-13 |
+| CMP-09 | Endpoints d'inférence | Servir la classification (+ explications) | variables → prédiction | SageMaker | FR-13 |
 | CMP-10 | Service d'analyse (outils) | Exécuter les requêtes prédéfinies, appliquer filtres, limites, seuil d'échantillon | paramètres validés → statistiques | Lambda + Athena | FR-15, FR-20 |
 | CMP-11 | Service de prédiction | Valider l'entrée, construire les variables, appeler les endpoints, fusionner | requête → réponse de prédiction | Lambda | FR-14 |
 | CMP-12 | Orchestrateur de l'assistant | Boucle LLM ↔ outils, bornée, journalisée ; modèle en paramètre de configuration (non choisi, ADR-0012) | question → réponse sourcée | Lambda + Bedrock | FR-19, FR-21 |

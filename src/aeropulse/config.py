@@ -127,3 +127,10 @@ FEATURE_COLUMNS: Final = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 HISTORY_WINDOW_DAYS: Final = 28
 TARGET_CLASSIFICATION: Final = "is_delayed"
 TARGET_REGRESSION: Final = "dep_delay"
+
+# --- Contrôle de qualité du modèle de classification (D-22, AC-09) -------------------------
+QUALITY_MIN_PR_AUC_GAIN: Final = 0.05
+"""Gain minimal de PR-AUC sur la baseline aéroport × heure, sur le même jeu d'évaluation."""
+QUALITY_MIN_ROC_AUC: Final = 0.65
+QUALITY_MAX_CALIBRATION_GAP: Final = 0.03
+"""|probabilité moyenne prédite − fréquence observée| maximal."""
