@@ -123,6 +123,24 @@ Le seuil par défaut de 0,5 ne retiendrait que 10 % des retards : le seuil F1 es
 
 MAE **18,82 min**, RMSE 54,45, erreur absolue médiane 5,57. Baseline : 19,31 min de MAE.
 
-## 7. À venir
+## 7. Explications SHAP (T4.7) — validation, modèle figé
 
-T4.6 évaluation finale unique sur le test (modèles et seuil figés) · T4.7 SHAP · T4.8 cibles de performance (G3) · T4.9 artefacts et bibliothèque `features/` partagée.
+Commande : `uv run python -m aeropulse.models.explain` (contributions exactes de XGBoost, en log-cotes ; échantillon de 30 000 vols de validation ; test non lu). Contrôle d'additivité : somme des contributions = marge du modèle, écart maximal 3·10⁻⁶. Chaque explication locale renvoie au moins 3 contributions (AC-08) avec la mention « influence sur la prédiction du modèle, pas une cause ».
+
+Importance globale (contribution absolue moyenne) :
+
+| Rang | Variable | Importance | Rang | Variable | Importance |
+|---|---|---|---|---|---|
+| 1 | heure de départ | 0,312 | 6 | itinéraire | 0,139 |
+| 2 | taux de retard 28 j (aéroport × heure) | 0,203 | 7 | point de rosée | 0,138 |
+| 3 | compagnie | 0,190 | 8 | taux de retard 28 j (aéroport) | 0,100 |
+| 4 | mois | 0,164 | 9 | pression au niveau de la mer | 0,079 |
+| 5 | taux de retard 28 j (compagnie) | 0,160 | 10 | plafond nuageux | 0,068 |
+
+Par groupes : les **variables météo pèsent environ 27 %** de l'importance totale, les **taux historiques 25 %**, le reste vient du calendrier, de la compagnie et de l'itinéraire. La distance, l'aéroport d'origine et la destination comptent très peu (déjà captés par l'itinéraire et l'historique).
+
+Lectures prudentes : (1) SHAP mesure l'influence sur le modèle, pas une cause ; (2) des variables corrélées (heure, historique aéroport × heure, saison) se partagent l'importance ; (3) l'importance du point de rosée peut refléter la saison ou le brouillard plus qu'un effet direct.
+
+## 8. À venir
+
+T4.6 évaluation finale unique sur le test (**en attente de feu vert explicite**) · T4.8 cibles de performance (G3) · T4.9 artefacts et bibliothèque `features/` partagée.

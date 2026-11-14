@@ -99,3 +99,19 @@ def test_final_freezes_models_without_reading_test(tmp_path: Path) -> None:
     ml.to_parquet(alt, index=False)
     r2 = final.run(alt, tmp_path / "m2")
     assert r1["classification"]["threshold"] == pytest.approx(r2["classification"]["threshold"])
+
+
+def test_shap_is_additive_and_local_has_three_contributions(tmp_path: Path) -> None:
+    from aeropulse.models import explain, final
+
+    ml = _ml()
+    path = tmp_path / "ml.parquet"
+    ml.to_parquet(path, index=False)
+    final.run(path, tmp_path / "m")
+    report = explain.run(path, tmp_path / "m", sample=60)
+    assert report["additivity_max_gap"] < 1e-3  # somme des contributions = marge du modèle
+    assert len(report["global_importance"]) == len(config.FEATURE_COLUMNS)
+    top = report["global_importance"][0]["mean_abs_shap"]
+    assert top >= report["global_importance"][-1]["mean_abs_shap"]
+    assert len(report["example"]["contributions"]) >= 3
+    assert "pas une cause" in report["example"]["disclaimer"]
