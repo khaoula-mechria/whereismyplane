@@ -70,7 +70,7 @@ D-01 reste tranchée **sous condition** (option A : dernière observation ≤ T-
 
 ## 7. Découpage chronologique (indicatif, D-17)
 
-Entraînement 2023 + partie de 2024 ; validation fin 2024 ; test 2025 (jusqu'à la dernière date réellement présente). Dates exactes en T3.6 d'après la couverture mensuelle réelle. Le jeu de test 2025 couvre au plus janvier–juillet.
+Entraînement 2023-01-01 → 2024-06-30 (621 512 vols éligibles) ; validation 2024-07-01 → 2024-12-31 (205 657) ; test 2025-01-01 → 2025-07-31 (200 417), **approuvé le 2026-11-14** (D-17, [ADR-0004](05-decisions/adr/0004-chronological-split.md)). Le test ne couvre que janvier–juillet 2025.
 
 ## 8. Limites à afficher (provisoires)
 

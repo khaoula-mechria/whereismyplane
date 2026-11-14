@@ -2,8 +2,7 @@
 
 Source unique pour : le seuil de retard, l'horizon T-2h, les colonnes interdites comme
 variables (prévention des fuites, ADR-0003), le seuil d'échantillon minimal (D-16) et les
-stations météo. Aucune date de découpage n'est fixée ici : elle dépend de la couverture
-réelle des données (T3.6, ADR-0004).
+stations météo, le découpage chronologique (D-17, ADR-0004) et le contrat de variables (T3.1).
 """
 
 from __future__ import annotations
@@ -28,6 +27,19 @@ LOCAL_TIMEZONE: Final = "America/New_York"
 AIRPORTS: Final = ("JFK", "EWR", "LGA")
 STUDY_START: Final = date(2023, 1, 1)
 STUDY_END: Final = date(2025, 7, 31)
+
+# --- Découpage chronologique (D-17, ADR-0004), dates de `flight_date` (heure locale) ------
+TRAIN_START: Final = date(2023, 1, 1)
+TRAIN_END: Final = date(2024, 6, 30)
+VALIDATION_START: Final = date(2024, 7, 1)
+VALIDATION_END: Final = date(2024, 12, 31)
+TEST_START: Final = date(2025, 1, 1)
+TEST_END: Final = date(2025, 7, 31)
+"""Le jeu de test ne sert qu'une fois, à l'évaluation finale."""
+
+# --- Météo (D-01, ADR-0009) ---------------------------------------------------------------
+MAX_WEATHER_AGE: Final = timedelta(hours=3)
+"""Au-delà, l'observation NOAA est considérée absente (NaN + indicateur), jamais remplacée."""
 
 # Stations NOAA Global Hourly (USAF+WBAN), vérifiées dans les fichiers 2024
 # (docs/data-acquisition-study.md §4).
@@ -85,3 +97,33 @@ def is_delayed(dep_delay_minutes: float) -> bool:
 def feature_cutoff(scheduled_departure_utc: datetime) -> datetime:
     """Instant T-2h : seules les informations connues à cet instant sont autorisées."""
     return scheduled_departure_utc - PREDICTION_HORIZON
+
+
+# --- Contrat de variables (T3.1) : liste blanche, vérifiée contre FORBIDDEN_FEATURE_COLUMNS --
+CATEGORICAL_FEATURES: Final = ("carrier", "origin", "destination", "route", "season")
+NUMERIC_FEATURES: Final = (
+    "distance_miles",
+    "scheduled_elapsed_minutes",
+    "departure_hour",
+    "day_of_week",
+    "month",
+    "is_weekend",
+    "is_holiday",
+    "temperature_c",
+    "dewpoint_c",
+    "dewpoint_spread_c",
+    "wind_speed_mps",
+    "visibility_m",
+    "ceiling_m",
+    "sea_level_pressure_hpa",
+    "weather_age_minutes",
+    "weather_missing",
+    "carrier_delay_rate_28d",
+    "origin_delay_rate_28d",
+    "route_delay_rate_28d",
+    "origin_hour_delay_rate_28d",
+)
+FEATURE_COLUMNS: Final = CATEGORICAL_FEATURES + NUMERIC_FEATURES
+HISTORY_WINDOW_DAYS: Final = 28
+TARGET_CLASSIFICATION: Final = "is_delayed"
+TARGET_REGRESSION: Final = "dep_delay"

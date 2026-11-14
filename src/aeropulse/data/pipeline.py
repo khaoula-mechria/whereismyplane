@@ -2,20 +2,22 @@
 
 Commande unique (T2.8) : ``uv run python -m aeropulse.data.pipeline [--max-weather-age-minutes N]``
 (préparation, validation, Parquet partitionné, agrégats analytiques).
-Le seuil d'âge de la météo n'a pas de valeur par défaut (décision en attente) : sans option,
-aucune observation n'est écartée pour cause d'âge, et ``weather_age_minutes`` reste disponible.
+Le seuil d'âge de la météo vient de ``config.MAX_WEATHER_AGE`` (3 h) ; au-delà, la météo est
+absente (``NaN``), jamais remplacée.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from collections.abc import Sequence
 from pathlib import Path
 
 import pandas as pd
 
+from aeropulse import config
 from aeropulse.analytics.engine import Analytics
 from aeropulse.data import clean, validate, weather
 
@@ -35,7 +37,10 @@ def run(
     if len(flights) != len(raw):
         raise validate.ValidationError("le nombre de lignes a changé pendant la préparation")
     out_dir.mkdir(parents=True, exist_ok=True)
-    flights.to_parquet(out_dir / "flights", partition_cols=["year", "month"], index=False)
+    target = out_dir / "flights"
+    if target.exists():  # relance idempotente : jamais de fichiers cumulés
+        shutil.rmtree(target)
+    flights.to_parquet(target, partition_cols=["year", "month"], index=False)
     report: dict[str, object] = {
         "rows": len(flights),
         "ml_eligible": int(flights["ml_eligible"].sum()),
@@ -61,7 +66,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--out-dir", type=Path, default=Path("data/processed"))
     p.add_argument("--analytics-dir", type=Path, default=Path("data/analytics"))
     p.add_argument("--no-aggregates", action="store_true", help="ne pas écrire les agrégats")
-    p.add_argument("--max-weather-age-minutes", type=float, default=None)
+    p.add_argument(
+        "--max-weather-age-minutes",
+        type=float,
+        default=config.MAX_WEATHER_AGE.total_seconds() / 60,
+    )
     p.add_argument("--expected-rows", type=int, default=None)
     args = p.parse_args(argv)
     age = (

@@ -1,6 +1,6 @@
 # ADR-0004 — Découpage chronologique
 
-- **Statut** : Acceptée (principe) — **dates exactes en attente de l'inspection du dataset** (D-17 tranchée sur le principe)
+- **Statut** : **Acceptée** — dates exactes approuvées le 2026-11-14 après mesure de la couverture réelle (D-17)
 - **Date** : 2026-11-05 (mise à jour après adoption du dataset NYC 2023–2025, [ADR-0010](0010-dataset-nyc-2023-2025.md))
 
 ## Contexte
@@ -21,7 +21,15 @@ Le découpage est **adapté à la période réellement disponible** du dataset, 
 | Validation | période ultérieure de 2024 |
 | Test | 2025 |
 
-Les dates exactes sont fixées en **T3.6** après vérification de la couverture mensuelle réelle (juillet 2025 pourrait être partiel ; la période annoncée est janvier 2023 – juillet 2025, non vérifiée). Aucune date précise n'est décidée avant cette inspection. On examinera aussi la répartition en nombre de vols pour que validation et test aient une taille suffisante.
+**Dates retenues (2026-11-14)**, sur `flight_date` (heure locale), constantes dans `config.py` :
+
+| Jeu | Période | Vols éligibles | Part |
+|---|---|---|---|
+| Entraînement | 2023-01-01 → 2024-06-30 | 621 512 | 60,5 % |
+| Validation | 2024-07-01 → 2024-12-31 | 205 657 | 20,0 % |
+| Test (une seule évaluation finale) | 2025-01-01 → 2025-07-31 | 200 417 | 19,5 % |
+
+Limites : le test ne couvre que janvier–juillet ; un seul été (2023) en entraînement. Le texte ci-dessous est le raisonnement initial : les dates exactes sont fixées en **T3.6** après vérification de la couverture mensuelle réelle (juillet 2025 pourrait être partiel ; la période annoncée est janvier 2023 – juillet 2025, non vérifiée). Aucune date précise n'est décidée avant cette inspection. On examinera aussi la répartition en nombre de vols pour que validation et test aient une taille suffisante.
 
 ## Alternatives écartées
 

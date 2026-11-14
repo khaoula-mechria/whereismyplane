@@ -59,3 +59,11 @@ def test_blocks_when_row_count_differs(tmp_path: Path) -> None:
     with pytest.raises(validate.ValidationError):
         pipeline.run(tmp_path / "raw", tmp_path / "out", expected_rows=41)
     assert not (tmp_path / "out").exists()
+
+
+def test_rerun_is_idempotent(tmp_path: Path) -> None:
+    _write_inputs(tmp_path / "raw")
+    out = tmp_path / "processed"
+    pipeline.run(tmp_path / "raw", out, expected_rows=40)
+    pipeline.run(tmp_path / "raw", out, expected_rows=40)
+    assert len(pd.read_parquet(out / "flights")) == 40
