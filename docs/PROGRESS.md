@@ -15,7 +15,7 @@
 | 1 | Acquérir, explorer et vérifier le dataset | **en cours** — données téléchargées et profilées ; reste la vérification de licence de la table Mostly Right |
 | 2 | Pipeline de préparation | **terminée en local** (T2.2–T2.8) ; T2.1 BTS non applicable (source = Parquet) |
 | 3 | Variables T-2h et cibles | **terminée en local** (T3.1–T3.8) ; revue de non-fuite avant G2 |
-| 4 | Modèles en local | **en cours** — T4.1–T4.4 faites |
+| 4 | Modèles en local | **en cours** — T4.1–T4.5 faites ; T4.6 (test) en attente de feu vert |
 | 5 | Entraînement sur SageMaker | à faire — conditionnée à G0 (coûts) |
 | 6 | Infrastructure avec CDK | à faire |
 | 7 | API et dashboard | à faire |
@@ -33,6 +33,7 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 
 - [x] 2026-11-06 — **WP0 (local) : T0.1–T0.5 réalisées** — structure du dépôt, `pyproject.toml` (uv), `.gitignore`, `.env.example`, `src/aeropulse/config.py` (seuil 15 min, horizon T-2h, colonnes interdites, stations NOAA, seuil de 30 vols), lint (ruff), typage strict (mypy), 8 tests (pytest), scan de secrets, pre-commit, CI GitHub Actions. Toutes les vérifications locales passent ; la CI n'a pas encore tourné sur GitHub — non commité
 - [x] 2026-11-06 — **T1.1 (code, dry-run)** : `aeropulse.data.manifest` / `aeropulse.data.download` (manifeste, résolution par HEAD, téléchargement atomique avec somme de contrôle, désactivé sans `--execute` ; BTS exige en plus `--accept-bts-licence-risk`). Dry-run réel : **40/40 fichiers résolus** (31 BTS + 9 NOAA), 963 746 371 octets au total, **aucun téléchargement**. Motif des noms BTS établi (sans parenthèses). 15 tests passent
+- [x] 2026-11-14 — **T4.5 modèles figés, seuil, calibration** (`models/final.py` ; artefacts dans `data/ml/models/`, non versionnés ; test non lu — vérifié par test) : seuil F1 = **0,200** choisi sur la validation (F1 0,429, précision 0,346, rappel 0,566, PR-AUC 0,390, Brier 0,138) ; régression MAE 18,82 min. Calibration : exacte sur l'entraînement, sous-estimation de 1,2 point sur la validation (dérive temporelle, pas un défaut de code). ROADMAP étape 1 alignée sur la source réelle. 51 tests, ruff, mypy strict OK — non commité
 - [x] 2026-11-14 — **T4.4 réglage** (`models/tune.py`, recherche aléatoire de 12 essais par tâche sur la validation, test non lu — vérifié par test ; paramètres dans `models/tuned_params.json`) : classification PR-AUC 0,382 → **0,390**, régression MAE 18,833 → **18,821** ; gain du même ordre que la dispersion entre essais, arbres de profondeur 4 meilleurs, `scale_pos_weight` n'aide pas. 50 tests, ruff, mypy strict OK — non commité
 - [x] 2026-11-14 — **T4.2–T4.3 premiers modèles** (`models/train.py`, xgboost ajouté ; hyperparamètres de départ non réglés ; validation seulement, test non lu — vérifié par test) : classification, PR-AUC logistique 0,376 / forêt 0,386 / XGBoost 0,382 (baseline 0,279), meilleur F1 0,426 (XGBoost) ; régression, **seul XGBoost à erreur absolue bat la baseline en MAE** (18,83 contre 19,31 min), les pertes quadratiques donnent une MAE pire que la médiane globale. Détail et limites : [model-report.md](04-quality/model-report.md). 49 tests, ruff, mypy strict OK — non commité
 - [x] 2026-11-14 — **T4.1 baselines** (`models/baselines.py`, `models/evaluate.py`, scikit-learn ajouté ; ajustées sur l'entraînement, évaluées sur la validation, test jamais lu — vérifié par un test) : classification, référence PR-AUC **0,279** (prévalence 0,191 ; F1 0,374) ; régression, référence MAE **19,31 min** (médiane par aéroport × heure). Détail : [model-report.md](04-quality/model-report.md). 47 tests, ruff, mypy strict OK — non commité
@@ -56,7 +57,7 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 ## Prochaines actions
 
 1. **Décision à prendre avant T4.6** : objectif de la régression (MAE avec perte absolue, RMSE avec perte quadratique, ou deux étapes : probabilité de retard puis ampleur). AC-06 est exprimé en MAE.
-2. **T4.5** : seuil F1 sur la validation, métriques complètes, calibration ; **T4.6** : évaluation finale unique sur le test (modèles figés avant).
+2. **T4.6 — évaluation finale unique sur le test** : modèles, seuil (0,200) et paramètres figés (T4.5) ; **attend votre feu vert explicite** (irréversible : le test ne doit servir qu'une fois). Puis T4.7 (SHAP), T4.8 (cibles de performance, G3), T4.9.
 3. Relecture de non-fuite avant G2 (T0.7) ; confirmer les conditions d'usage de la table Mostly Right (`license` null).
 4. T0.8 : estimation de coûts (G0), nécessaire avant WP5 (SageMaker). Révoquer la clé Mostly Right exposée (voir Sécurité).
 

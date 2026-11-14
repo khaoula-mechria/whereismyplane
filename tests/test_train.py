@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from aeropulse import config
 from aeropulse.models import train
@@ -77,3 +79,23 @@ def test_tuning_selects_on_validation_and_never_reads_test(tmp_path: Path) -> No
         assert r1[task]["best"]["params"] == r2[task]["best"]["params"]
         assert len(r1[task]["log"]) == 2
     assert r1["evaluated_on"] == "validation"
+
+
+def test_final_freezes_models_without_reading_test(tmp_path: Path) -> None:
+    from aeropulse.models import final
+
+    ml = _ml()
+    path = tmp_path / "ml.parquet"
+    ml.to_parquet(path, index=False)
+    r1 = final.run(path, tmp_path / "m1")
+    for name in ("classifier.json", "regressor.json", "meta.json", "validation_report.json"):
+        assert (tmp_path / "m1" / name).exists()
+    meta = json.loads((tmp_path / "m1" / "meta.json").read_text(encoding="utf-8"))
+    assert meta["feature_columns"] == list(config.FEATURE_COLUMNS)
+    assert 0.0 < meta["threshold"] < 1.0
+    ml.loc[ml["split"] == "test", "dep_delay"] = 1e6
+    ml.loc[ml["split"] == "test", "is_delayed"] = True
+    alt = tmp_path / "alt.parquet"
+    ml.to_parquet(alt, index=False)
+    r2 = final.run(alt, tmp_path / "m2")
+    assert r1["classification"]["threshold"] == pytest.approx(r2["classification"]["threshold"])

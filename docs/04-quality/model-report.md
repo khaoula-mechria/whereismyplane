@@ -88,6 +88,41 @@ Lecture :
 - **Déséquilibre** : pondérer la classe minoritaire (`scale_pos_weight` 2 ou 4) n'améliore pas la PR-AUC (le meilleur essai utilise 1). Le déséquilibre (19 % de retards) est modéré ; l'ajustement du seuil F1 (T4.5) suffit à ce stade.
 - **Optimisme** : 12 essais sélectionnés sur la validation, qui sert aussi à l'arrêt anticipé : la valeur de validation du meilleur essai est un peu favorable. Seul le test (T4.6) donnera une mesure sans biais.
 
-## 6. À venir
+## 6. Modèles figés, seuil et calibration (T4.5)
 
-T4.5 seuil et métriques complètes (calibration, courbes) · T4.6 évaluation finale unique sur le test · T4.7 SHAP · T4.8 cibles de performance (G3) · T4.9 artefacts.
+Commande : `uv run python -m aeropulse.models.final` ; les deux modèles XGBoost réglés sont réentraînés **sur l'entraînement seul** (nombre d'arbres fixé par le réglage, sans arrêt anticipé sur la validation) et sauvegardés dans `data/ml/models/` (`classifier.json`, `regressor.json`, `meta.json` : variables, catégories, seuil, paramètres ; non versionné). Test non lu.
+
+### Classification, seuil choisi sur la validation (ADR-0015)
+
+Seuil retenu : **0,200** (F1 maximal). Métriques de validation :
+
+| PR-AUC | ROC-AUC | F1 | Précision | Rappel | Brier |
+|---|---|---|---|---|---|
+| 0,390 | 0,720 | 0,429 | 0,346 | 0,566 | 0,138 (référence prévalence : 0,154) |
+
+Compromis précision/rappel autour du seuil (validation) :
+
+| Seuil | Précision | Rappel | F1 |
+|---|---|---|---|
+| 0,10 | 0,249 | 0,863 | 0,386 |
+| 0,15 | 0,299 | 0,713 | 0,421 |
+| **0,20** | 0,346 | 0,566 | **0,429** |
+| 0,25 | 0,389 | 0,450 | 0,417 |
+| 0,30 | 0,431 | 0,354 | 0,388 |
+| 0,40 | 0,506 | 0,207 | 0,294 |
+| 0,50 | 0,570 | 0,104 | 0,176 |
+
+Le seuil par défaut de 0,5 ne retiendrait que 10 % des retards : le seuil F1 est justifié. La probabilité brute reste à afficher avec la décision (ADR-0015).
+
+### Calibration
+
+- Sur l'entraînement, le modèle est calibré (probabilité moyenne 0,204 = fréquence observée 0,204).
+- Sur la validation, il **sous-estime d'environ 1,2 point** (0,178 prédit contre 0,191 observé) : la fréquence observée dépasse la prédiction dans les 10 déciles. Ce n'est pas un défaut de code : le modèle suit la saisonnalité (juillet–août élevés, automne bas) mais le retard de fin 2024 est plus élevé que prévu (décembre : 0,187 prédit, 0,230 observé ; septembre : 0,152 prédit, 0,123 observé). C'est la **dérive temporelle** attendue (R-03) : les probabilités sont utilisables pour classer les vols, moins comme fréquences exactes. Une recalibration reste possible ; elle n'est pas faite.
+
+### Régression (MAE, perte absolue ; validation)
+
+MAE **18,82 min**, RMSE 54,45, erreur absolue médiane 5,57. Baseline : 19,31 min de MAE.
+
+## 7. À venir
+
+T4.6 évaluation finale unique sur le test (modèles et seuil figés) · T4.7 SHAP · T4.8 cibles de performance (G3) · T4.9 artefacts et bibliothèque `features/` partagée.

@@ -9,7 +9,7 @@
 - Séparation train / validation / test **chronologique**.
 - Le LLM n'invente aucun chiffre : tout passe par des outils contrôlés (pas de SQL libre).
 - **Local d'abord** : valider données et modèles avant d'activer des ressources AWS payantes.
-- Dataset de référence NYC Flight Delays and Weather (2023–2025), JFK/EWR/LGA ; données d'entraînement **reconstruites depuis BTS + NOAA** avec cutoff T-2h (proposé, ADR-0016). Le dataset publié a un cutoff de T-1h. Caractéristiques à vérifier sur les données réelles ; couverture et limites à signaler dans l'interface.
+- Dataset de référence NYC Flight Delays and Weather (2023–2025), JFK/EWR/LGA ; vols issus du Parquet Mostly Right (compte Pro du propriétaire, ADR-0016 amendé le 2026-11-13) ; météo **reconstruite depuis NOAA Global Hourly** avec cutoff T-2h, car le fichier publié a un cutoff de T-1h. Caractéristiques à vérifier sur les données réelles ; couverture et limites à signaler dans l'interface.
 - **Pas d'abonnement** ; pas de prévisions météo dans le MVP (observations uniquement).
 - **Budget** : 100 USD/mois maximum, région `us-east-1` ; aucun déploiement payant avant estimation des coûts ([cost-estimate.md](04-quality/cost-estimate.md)).
 
@@ -21,11 +21,11 @@
 ## Étapes
 
 ### Étape 1 — Acquérir, explorer et vérifier le dataset
-- **Où** : local (aucun coût AWS, aucun abonnement)
-- **Dépend de** : approbation de [ADR-0016](05-decisions/adr/0016-dataset-acquisition-strategy.md) (acquisition par reconstruction BTS + NOAA, étude : [data-acquisition-study.md](data-acquisition-study.md))
+- **Où** : local (aucun coût AWS ; Parquet Mostly Right téléchargé avec le compte Pro du propriétaire)
+- **Dépend de** : [ADR-0016](05-decisions/adr/0016-dataset-acquisition-strategy.md) (amendé : Parquet Mostly Right + NOAA ; BTS optionnel ; étude : [data-acquisition-study.md](data-acquisition-study.md)). **Faite en local le 2026-11-13**
 - **Résultat attendu** : schéma et qualité des données connus.
 - **Critères de fin** :
-  - sources d'origine (BTS, NOAA Global Hourly) téléchargées, tailles et sommes de contrôle consignées ;
+  - Parquet Mostly Right et NOAA Global Hourly téléchargés (BTS optionnel), tailles et sommes de contrôle consignées ;
   - volumes réels vérifiés (vols par mois, aéroports, période) et comparés aux chiffres publiés par Mostly Right (annoncés, non vérifiés) ;
   - source exacte et **licences BTS/NOAA** documentées ([dataset-card.md](dataset-card.md)) ;
   - test de réplication sur l'échantillon public de 500 lignes (2023-01-01) réussi ;
@@ -114,6 +114,6 @@
 ## Risques à surveiller
 
 - Fuite de données via la météo ou les statistiques historiques (le cutoff du dataset publié est T-1h, pas T-2h).
-- Licences BTS et NOAA non encore vérifiées ; prévisions archivées non disponibles ou non vérifiées.
+- Licence de la table Mostly Right non établie (`license` null ; usage local, pas de redistribution) ; licence NOAA lue (ouverte, attribution) ; prévisions archivées non disponibles ou non vérifiées.
 - Volume limité par route et par compagnie : prévoir un seuil minimal d'échantillons dans les outils statistiques.
 - Coûts AWS (plafond 100 USD/mois) : endpoints SageMaker laissés actifs, Knowledge Base, ressources oubliées. Les alertes AWS Budgets ne coupent pas les dépenses.
