@@ -15,7 +15,7 @@
 | 1 | Acquérir, explorer et vérifier le dataset | **en cours** — données téléchargées et profilées ; reste la vérification de licence de la table Mostly Right |
 | 2 | Pipeline de préparation | **terminée en local** (T2.2–T2.8) ; T2.1 BTS non applicable (source = Parquet) |
 | 3 | Variables T-2h et cibles | **terminée en local** (T3.1–T3.8) ; revue de non-fuite avant G2 |
-| 4 | Modèles en local | **en cours** — T4.1–T4.5 faites ; T4.6 (test) en attente de feu vert |
+| 4 | Modèles en local | **en cours** — T4.1–T4.7 faites, test consommé ; reste T4.8 (G3) et T4.9 |
 | 5 | Entraînement sur SageMaker | à faire — conditionnée à G0 (coûts) |
 | 6 | Infrastructure avec CDK | à faire |
 | 7 | API et dashboard | à faire |
@@ -33,6 +33,7 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 
 - [x] 2026-11-06 — **WP0 (local) : T0.1–T0.5 réalisées** — structure du dépôt, `pyproject.toml` (uv), `.gitignore`, `.env.example`, `src/aeropulse/config.py` (seuil 15 min, horizon T-2h, colonnes interdites, stations NOAA, seuil de 30 vols), lint (ruff), typage strict (mypy), 8 tests (pytest), scan de secrets, pre-commit, CI GitHub Actions. Toutes les vérifications locales passent ; la CI n'a pas encore tourné sur GitHub — non commité
 - [x] 2026-11-06 — **T1.1 (code, dry-run)** : `aeropulse.data.manifest` / `aeropulse.data.download` (manifeste, résolution par HEAD, téléchargement atomique avec somme de contrôle, désactivé sans `--execute` ; BTS exige en plus `--accept-bts-licence-risk`). Dry-run réel : **40/40 fichiers résolus** (31 BTS + 9 NOAA), 963 746 371 octets au total, **aucun téléchargement**. Motif des noms BTS établi (sans parenthèses). 15 tests passent
+- [x] 2026-11-14 — **T4.6 évaluation finale sur le test (usage unique, exécutée sur « go test » explicite)** : 200 417 vols, modèles et seuil 0,200 figés avant (empreintes SHA-256 consignées, verrou anti-réexécution). **Classification : PR-AUC 0,415** (IC 95 % 0,410–0,420) contre 0,309 pour la baseline → AC-05 satisfait ; F1 0,447, précision 0,324, rappel 0,719 (≈ 2 alertes sur 3 fausses) ; calibration +1,2 point. **Régression : MAE 22,06 min contre 22,17** pour la meilleure baseline → AC-06 satisfait à la lettre mais de justesse (−0,5 %, dans l'intervalle de confiance) ; RMSE −4 % ; erreur absolue médiane pire (7,1 contre 5,0). Détail et segments : [model-report.md](04-quality/model-report.md) §8. Le test ne doit plus servir. 53 tests, ruff, mypy strict OK — non commité
 - [x] 2026-11-14 — **T0.8 (estimation faite, G0 en attente d'approbation)** : [cost-estimate.md](04-quality/cost-estimate.md) rempli à partir des tarifs officiels `us-east-1` (AWS Price List, lus le 2026-11-14, sans offre gratuite) et d'hypothèses d'usage à valider. Nominal **7,53 USD** (Haiku) / 18,50 (Sonnet) ; pessimiste (endpoints oubliés 1 semaine) **79,58 USD** avec Haiku, **393 USD** avec Sonnet ; deux endpoints permanents ≈ 168 USD/mois (hors budget). Non relevés : CloudFront, Knowledge Bases, durées minimales Glue. Aucune ressource AWS créée — non commité
 - [x] 2026-11-14 — **T4.7 SHAP** (`models/explain.py`, contributions exactes de XGBoost sur un échantillon de validation, test non lu ; additivité vérifiée, ≥ 3 contributions locales avec la mention « influence, pas cause » — AC-08 côté fonction) : variables dominantes = heure de départ, taux de retard 28 j aéroport × heure, compagnie, mois ; météo ≈ 27 % de l'importance, historique ≈ 25 %. 52 tests, ruff, mypy strict OK — non commité
 - [x] 2026-11-14 — **T4.5 modèles figés, seuil, calibration** (`models/final.py` ; artefacts dans `data/ml/models/`, non versionnés ; test non lu — vérifié par test) : seuil F1 = **0,200** choisi sur la validation (F1 0,429, précision 0,346, rappel 0,566, PR-AUC 0,390, Brier 0,138) ; régression MAE 18,82 min. Calibration : exacte sur l'entraînement, sous-estimation de 1,2 point sur la validation (dérive temporelle, pas un défaut de code). ROADMAP étape 1 alignée sur la source réelle. 51 tests, ruff, mypy strict OK — non commité
@@ -58,10 +59,10 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 
 ## Prochaines actions
 
-1. **Décision à prendre avant T4.6** : objectif de la régression (MAE avec perte absolue, RMSE avec perte quadratique, ou deux étapes : probabilité de retard puis ampleur). AC-06 est exprimé en MAE.
-2. **T4.6 — évaluation finale unique sur le test** : modèles, seuil (0,200) et paramètres figés (T4.5) ; **attend votre feu vert explicite** (irréversible : le test ne doit servir qu'une fois). Puis T4.7 (SHAP), T4.8 (cibles de performance, G3), T4.9.
-3. Relecture de non-fuite avant G2 (T0.7) ; confirmer les conditions d'usage de la table Mostly Right (`license` null).
-4. **G0 : approuver (ou amender) l'estimation de coûts** et ses 4 conditions (pas d'endpoint permanent, modèle Bedrock économique, plafonds de jetons, suppression disciplinée) ; compléter les postes non relevés. Révoquer la clé Mostly Right exposée (voir Sécurité).
+1. **T4.8 (G3)** : fixer les cibles de performance (D-10) et finaliser le rapport de modélisation. **Décision du propriétaire** : que faire de la régression des minutes (gain de 0,5 % seulement, peu informative) — la présenter comme secondaire, la retirer de l'interface, ou l'améliorer avec de nouvelles variables (nouveau cycle de validation ; **le test ne peut plus servir pour la mesurer**, il faudrait de nouvelles données ou une validation temporelle).
+2. **T4.9** : sauvegarde des artefacts et bibliothèque `features/` partagée entraînement/service (R-18).
+3. **G0** : approuver (ou amender) l'estimation de coûts et ses 4 conditions ; compléter les postes non relevés. T0.6 (AWS Budgets) nécessite un compte AWS.
+4. Relecture de non-fuite avant G2 (T0.7) ; confirmer les conditions d'usage de la table Mostly Right (`license` null). Révoquer la clé Mostly Right exposée (voir Sécurité).
 
 ## Blocages et vérifications en attente
 

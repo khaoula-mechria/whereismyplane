@@ -115,3 +115,22 @@ def test_shap_is_additive_and_local_has_three_contributions(tmp_path: Path) -> N
     assert top >= report["global_importance"][-1]["mean_abs_shap"]
     assert len(report["example"]["contributions"]) >= 3
     assert "pas une cause" in report["example"]["disclaimer"]
+
+
+def test_final_evaluation_is_single_use_and_needs_flag(tmp_path: Path) -> None:
+    from aeropulse.models import final, final_evaluation
+
+    ml = _ml()
+    ml["flight_date"] = "2025-03-01"
+    ml["departure_hour"] = ml["departure_hour"].abs().astype(int) % 24
+    path = tmp_path / "ml.parquet"
+    ml.to_parquet(path, index=False)
+    final.run(path, tmp_path / "m")
+    with pytest.raises(PermissionError):
+        final_evaluation.run(path, tmp_path / "m")  # sans l'indicateur explicite
+    assert not (tmp_path / "m" / final_evaluation.REPORT_NAME).exists()
+    report = final_evaluation.run(path, tmp_path / "m", final_evaluation=True)
+    assert report["evaluated_on"] == "test" and report["n"] == len(ml[ml["split"] == "test"])
+    assert set(report["artifact_sha256"]) == set(final_evaluation.ARTIFACTS)
+    with pytest.raises(final_evaluation.AlreadyEvaluatedError):
+        final_evaluation.run(path, tmp_path / "m", final_evaluation=True)

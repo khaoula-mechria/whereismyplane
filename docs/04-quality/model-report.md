@@ -141,6 +141,50 @@ Par groupes : les **variables météo pèsent environ 27 %** de l'importance tot
 
 Lectures prudentes : (1) SHAP mesure l'influence sur le modèle, pas une cause ; (2) des variables corrélées (heure, historique aéroport × heure, saison) se partagent l'importance ; (3) l'importance du point de rosée peut refléter la saison ou le brouillard plus qu'un effet direct.
 
-## 8. À venir
+## 8. Évaluation finale sur le test (T4.6) — usage unique, 2026-11-14
 
-T4.6 évaluation finale unique sur le test (**en attente de feu vert explicite**) · T4.8 cibles de performance (G3) · T4.9 artefacts et bibliothèque `features/` partagée.
+Modèles, hyperparamètres et seuil (0,200) **figés avant** (T4.4–T4.5, empreintes SHA-256 des artefacts dans le rapport). Exécution unique de `aeropulse.models.final_evaluation` sur **200 417 vols (2025-01-01 → 2025-07-31)** ; un fichier de verrou interdit toute seconde exécution. Rapport brut : `data/ml/models/test_evaluation.json` (non versionné). Aucun résultat du test n'a servi à modifier quoi que ce soit.
+
+### Classification (seuil 0,200 choisi sur la validation)
+
+| | Modèle | Baseline aéroport × heure | Prévalence seule |
+|---|---|---|---|
+| PR-AUC | **0,415** (IC 95 % : 0,410–0,420) | 0,309 | 0,213 |
+| ROC-AUC | 0,719 | 0,659 | 0,500 |
+| F1 | 0,447 | 0,419 | — |
+| Précision | 0,324 | 0,298 | — |
+| Rappel | 0,719 | 0,710 | — |
+
+- **AC-05 satisfait** : la PR-AUC dépasse la baseline de 0,106 (soit +34 %), hors de l'intervalle de confiance. La performance est même supérieure à celle de la validation (0,390) ; la prévalence plus élevée du test (21,3 % contre 19,1 %) y contribue, la PR-AUC dépendant de la prévalence.
+- **Le gain sur la baseline est réel mais modeste en valeur absolue** : le modèle identifie les retards bien au-dessus du hasard (ROC-AUC 0,72), pas de façon fiable vol par vol. À ce seuil, **environ 2 alertes sur 3 sont de fausses alertes** (précision 0,324) pour un rappel de 0,719.
+- **Calibration** : probabilité moyenne prédite 0,225 pour une fréquence observée de 0,213 (surestimation de 1,2 point ; sur la validation c'était une sous-estimation de 1,2 point : la dérive change de sens d'une période à l'autre). Brier 0,149.
+
+### Régression (perte absolue)
+
+| | Modèle | Médiane par aéroport × heure | Médiane globale |
+|---|---|---|---|
+| MAE (min) | **22,06** (IC 95 % : 21,84–22,31) | 22,17 | 22,31 |
+| RMSE (min) | 60,06 | 62,51 | 62,93 |
+| Erreur absolue médiane (min) | 7,1 | 5,0 | 5,0 |
+
+- **AC-06 satisfait à la lettre, mais de justesse** : la MAE du modèle est inférieure de **0,11 min (0,5 %)** à la meilleure baseline ; cet écart est **plus petit que l'intervalle de confiance du modèle** (un test apparié n'a pas été fait) et ne doit pas être présenté comme une amélioration établie en MAE. Sur la validation, l'avantage était de 2,5 % : il a presque disparu hors échantillon, ce qui confirme l'optimisme de la validation.
+- Le modèle améliore nettement le RMSE (−4 %), donc les gros retards, mais l'erreur absolue **médiane** est plus mauvaise que la baseline (7,1 contre 5,0) : il déplace ses prédictions vers le haut, au prix des vols à l'heure.
+- Conclusion honnête : **à T-2h, avec ces variables, la régression des minutes de retard est peu informative** ; la classification est la fonctionnalité utile.
+
+### Erreurs par segment (test)
+
+- **Aéroport** : EWR est surestimé (0,243 prédit, 0,222 observé), JFK surestimé (0,234 contre 0,205), LGA assez bien calibré (0,202 contre 0,211).
+- **Heure de départ** : le taux de retard monte de 8 % (6 h–9 h : 9,8 %) à 41 % (22 h–23 h) ; le modèle suit cette tendance (prédit 0,116 → 0,427). L'erreur absolue en minutes croît avec l'heure (11,9 min le matin, 34,1 min en soirée) : **les retards du soir sont les plus difficiles à estimer**.
+- **Mois** : janvier est nettement surestimé (0,223 prédit, 0,166 observé), alors que mai–juillet sont bien calibrés (juillet : 0,295 contre 0,295). Les taux historiques sur 28 jours suivent mal la baisse hivernale.
+- **Compagnie (8 plus grandes)** : B6 (0,305 prédit, 0,251 observé) et UA (0,256 contre 0,214) sont surestimées ; YX est sous-estimée (0,155 contre 0,179) ; DL et AA sont bien calibrées.
+
+### Limites à afficher (à ne pas minimiser)
+
+- Le test ne couvre que janvier–juillet 2025 (pas de fin d'année) ; un seul été.
+- Les probabilités classent les vols mais ne sont pas des fréquences exactes (dérive d'un mois et d'une période à l'autre).
+- Météo : dernière observation ≤ T-2h, pas une prévision ; aucune information sur l'avion précédent ni la congestion.
+- Résultats rétrospectifs sur données historiques, **pas une prédiction en temps réel**.
+
+## 9. À venir
+
+T4.8 cibles de performance (D-10) et rapport de modélisation (G3) · T4.9 artefacts et bibliothèque `features/` partagée · décision sur l'avenir de la régression (voir PROGRESS).
