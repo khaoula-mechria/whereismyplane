@@ -29,3 +29,8 @@ Un endpoint de classification et un de régression, enregistrés dans le Model R
 
 - (+) Architecture conforme à la synthèse, coûts maîtrisés par le cycle de vie.
 - (−) Le service est indisponible quand les endpoints sont supprimés : `503 model_unavailable` explicite et procédure de démonstration ([deployment-strategy.md](../../04-quality/deployment-strategy.md)).
+
+
+## Note du 2026-11-14 — hébergement de la route de prédiction
+
+La route `POST /v1/predict` est une **Lambda en image conteneur** (option A, choisie par le propriétaire : les dépendances du modèle, environ 316 Mo mesurés sur Windows, dépassent la limite de 250 Mo d'un paquet zip). L'appel au modèle passe par le contrat `ModelBackend` : modèle en processus pour les tests locaux et LocalStack, endpoint SageMaker temporaire ensuite (inchangé par rapport à cet ADR). Le choix « modèle hébergé dans Lambda plutôt que SageMaker » reste une question ouverte, non décidée.

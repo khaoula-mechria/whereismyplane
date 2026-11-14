@@ -73,3 +73,16 @@ Chaque jalon produit un court rapport : tests passés/échoués, couverture des 
 ## 6. Limites assumées
 
 Pas de test de charge important (hors périmètre MVP), pas d'accessibilité automatisée (contrôle manuel, NFR-12), évaluation du LLM par jeu fini donc non exhaustive.
+
+
+## Tests locaux avec LocalStack, puis passage à AWS (décision du propriétaire, 2026-11-14)
+
+Principe : **tout est testé en local d'abord** ; le passage à AWS ne se fait que sur **instruction explicite du propriétaire**, après G0 ([cost-estimate.md](cost-estimate.md)).
+
+| Niveau | Outil | Ce qui est testé | État |
+|---|---|---|---|
+| 1. Unitaire et intégration en processus | pytest | validation, variables T-2h, service (modes saisie et rejeu), handler (événements API Gateway simulés), parité avec `ml_dataset`, assemblage du contexte d'image (intégrité du modèle) | **Fait** (81 tests ; parité vérifiée sur 3 000 vols réels) |
+| 2. Émulation AWS | **LocalStack** (Docker) | S3 (artefacts, tables), Lambda, API Gateway, IAM, CloudWatch Logs : déploiement de l'infrastructure et appels HTTP réels vers la route `/v1/predict` | **À faire** : Docker installé mais **démon arrêté** ; LocalStack non installé ; conditions d'usage de l'édition utilisée (compte, jeton) **à vérifier à l'installation** |
+| 3. AWS réel | CDK + compte AWS | SageMaker, Bedrock, Athena/Glue réels, Budgets | **Interdit tant que G0 n'est pas approuvée et que le propriétaire n'a pas donné le signal** |
+
+Limites connues de l'émulation (à ne pas supposer résolues) : **SageMaker** (endpoints, pipelines, Model Registry) et **Bedrock** ne sont pas couverts, ou seulement dans les éditions payantes de LocalStack : à vérifier avant de s'y fier. La route de prédiction est donc testée derrière le contrat `ModelBackend` (modèle en processus aujourd'hui) ; l'implémentation SageMaker de ce contrat est testée avec un client `boto3` simulé (Stubber) en local, et **réellement seulement sur AWS**. Les résultats LocalStack ne prouvent ni les coûts, ni les quotas, ni la latence AWS.
