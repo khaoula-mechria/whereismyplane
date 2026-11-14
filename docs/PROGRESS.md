@@ -15,7 +15,7 @@
 | 1 | Acquérir, explorer et vérifier le dataset | **en cours** — données téléchargées et profilées ; reste la vérification de licence de la table Mostly Right |
 | 2 | Pipeline de préparation | **terminée en local** (T2.2–T2.8) ; T2.1 BTS non applicable (source = Parquet) |
 | 3 | Variables T-2h et cibles | **terminée en local** (T3.1–T3.8) ; revue de non-fuite avant G2 |
-| 4 | Modèles en local | à faire |
+| 4 | Modèles en local | **en cours** — T4.1 baselines faites |
 | 5 | Entraînement sur SageMaker | à faire — conditionnée à G0 (coûts) |
 | 6 | Infrastructure avec CDK | à faire |
 | 7 | API et dashboard | à faire |
@@ -33,6 +33,7 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 
 - [x] 2026-11-06 — **WP0 (local) : T0.1–T0.5 réalisées** — structure du dépôt, `pyproject.toml` (uv), `.gitignore`, `.env.example`, `src/aeropulse/config.py` (seuil 15 min, horizon T-2h, colonnes interdites, stations NOAA, seuil de 30 vols), lint (ruff), typage strict (mypy), 8 tests (pytest), scan de secrets, pre-commit, CI GitHub Actions. Toutes les vérifications locales passent ; la CI n'a pas encore tourné sur GitHub — non commité
 - [x] 2026-11-06 — **T1.1 (code, dry-run)** : `aeropulse.data.manifest` / `aeropulse.data.download` (manifeste, résolution par HEAD, téléchargement atomique avec somme de contrôle, désactivé sans `--execute` ; BTS exige en plus `--accept-bts-licence-risk`). Dry-run réel : **40/40 fichiers résolus** (31 BTS + 9 NOAA), 963 746 371 octets au total, **aucun téléchargement**. Motif des noms BTS établi (sans parenthèses). 15 tests passent
+- [x] 2026-11-14 — **T4.1 baselines** (`models/baselines.py`, `models/evaluate.py`, scikit-learn ajouté ; ajustées sur l'entraînement, évaluées sur la validation, test jamais lu — vérifié par un test) : classification, référence PR-AUC **0,279** (prévalence 0,191 ; F1 0,374) ; régression, référence MAE **19,31 min** (médiane par aéroport × heure). Détail : [model-report.md](04-quality/model-report.md). 47 tests, ruff, mypy strict OK — non commité
 - [x] 2026-11-14 — **WP3 (local) : T3.1–T3.8** — D-17 (dates du découpage) et D-20 (âge max. de la météo : 3 h) **approuvées** ; `config.py` : dates, `MAX_WEATHER_AGE`, contrat de variables (`FEATURE_COLUMNS`, vérifié contre les colonnes interdites). Modules `features/` : `targets`, `split` (test protégé par `final_evaluation=True`), `temporal`, `weather`, `history` (taux de retard 28 j sur les **jours précédents** seulement, NaN sous 30 vols), `build` → `data/ml/ml_dataset.parquet` (1 027 586 lignes : 621 512 / 205 657 / 200 417). `tests/test_leakage.py` (passé strict, futur modifié sans effet sur le passé, météo > T-2h refusée, garde du test). **Défaut corrigé** : relancer le pipeline cumulait les fichiers partitionnés (lignes doublées) ; maintenant idempotent, avec test. 43 tests, ruff, mypy strict OK — non commité. **G2 (non-fuite) : preuves automatisées en place, à confirmer par revue (T0.7)**
 - [x] 2026-11-13 — **T2.8 — WP2 terminé en local** : commande unique `uv run python -m aeropulse.data.pipeline --expected-rows 1056897` (validation, préparation, Parquet partitionné, agrégats) ; exécution réelle en ~10 s ; `tests/test_pipeline.py` (bout en bout + blocage si le nombre de lignes diffère, rien d'écrit). 34 tests passent, ruff, mypy strict et scan de secrets OK — non commité
 - [x] 2026-11-13 — **T2.6–T2.7 (local)** — `aeropulse.analytics` (seul module avec du SQL) : `queries.py` (dimensions et filtres en listes blanches, valeurs liées par `?`, limite plafonnée à 100, valeurs de carrier/destination issues des données) et `engine.py` (DuckDB en lecture seule sur `data/processed/flights`) ; sortie avec `source`, `period`, `n_flights`, `n_scored` ; **< 30 vols → « données insuffisantes »** (AC-13) ; filtres hors liste, injection, limites refusés (AC-15, tests). `export_aggregates` écrit `data/analytics/{carrier,airport,route}.parquet` (14 compagnies, 3 aéroports, 268 itinéraires). Vérifié sur les vraies données : totaux par aéroport = profil du fichier brut (LGA 403 973, EWR 335 855, JFK 317 069). 32 tests passent — non commité
@@ -52,9 +53,9 @@ Statuts possibles : à faire, en cours, bloquée, terminée.
 
 ## Prochaines actions
 
-1. **WP4 (modèles en local)** : baselines (T4.1 : prévalence, médiane, heuristique aéroport × heure), puis modèles de classification et de régression ; choix du seuil de classification sur la validation (ADR-0015). Le test reste intact jusqu'à l'évaluation finale.
-2. Relecture de non-fuite avant G2 (T0.7) ; revue des variables d'historique.
-3. Confirmer les conditions d'usage de la table Mostly Right (`license` null) ; BTS optionnel.
+1. **T4.2–T4.3** : classification (régression logistique, Random Forest, XGBoost) et régression (linéaire, Random Forest, XGBoost) ; XGBoost est à ajouter aux dépendances. Réglage sur la validation uniquement (T4.4).
+2. **T4.5** : seuil F1 sur la validation, métriques complètes ; **T4.6** : évaluation finale unique sur le test.
+3. Relecture de non-fuite avant G2 (T0.7) ; confirmer les conditions d'usage de la table Mostly Right (`license` null).
 4. T0.8 : estimation de coûts (G0), nécessaire avant WP5 (SageMaker). Révoquer la clé Mostly Right exposée (voir Sécurité).
 
 ## Blocages et vérifications en attente

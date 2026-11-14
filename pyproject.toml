@@ -9,6 +9,7 @@ dependencies = [
     "pyarrow>=16",
     "duckdb>=1.0",
     "tzdata",  # fuseau America/New_York sous Windows
+    "scikit-learn>=1.9.1",
 ]
 
 [dependency-groups]
@@ -42,3 +43,7 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 python_version = "3.11"
 strict = true
 files = ["src", "tests", "scripts"]
+
+[[tool.mypy.overrides]]
+module = ["sklearn.*"]
+ignore_missing_imports = true
