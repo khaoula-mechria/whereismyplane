@@ -33,6 +33,7 @@ Nom du projet : **AeroPulse** (anciennement FlightWise). Dataset : **NYC Flight 
 | D-20 | **Âge maximal de la météo à T-2h** : 3 h ; au-delà, observation considérée absente (NaN + indicateur `weather_missing`), jamais remplacée (398 vols > 3 h mesurés, 0,04 %) | **Tranchée (approuvée le 2026-11-14)** | [0009](adr/0009-weather-at-t2h.md) | T3.4 | FR-07 / AC-24 |
 | D-21 | **Régression reportée (pas abandonnée)** : pour l'instant le produit ne prédit que la probabilité de retard > 15 min (classification) ; un seul endpoint SageMaker ; AC-06 suspendu ; aucune durée de retard estimée ; réouverture possible (conditions dans l'ADR) | **Tranchée (décision du propriétaire, 2026-11-14)** | [0017](adr/0017-regression-postponed.md) | T4.3 (retirée), T5.2–T5.6, T7.3 | FR-08, FR-09, FR-13, FR-14 |
 | D-22 | **Cibles de qualité du modèle de classification** (contrôle d'enregistrement AC-09) : gain de PR-AUC ≥ +0,05 sur la baseline, ROC-AUC ≥ 0,65, calibration ≤ 0,03, tests de non-fuite verts ; verdict **G3** (go pour la classification) | **Tranchée (approuvée le 2026-11-14)** ; seuils dans `config.py`, contrôle `models/quality.py` | [model-report.md §10](../04-quality/model-report.md) | T4.8, T5.4 | FR-12 / AC-05, AC-09 |
+| D-23 | **Architecture du déploiement AWS de test** : inférence dans la Lambda (aucun endpoint SageMaker), bundle S3 versionné et vérifié, pipeline SageMaker Prepare → Train → Evaluate (D-22 sur la validation) → Register (approbation manuelle) → promotion automatique ; préparation en SageMaker Processing au lieu d'un job Glue ; `/v1/stats` via DuckDB sur le Parquet copié depuis S3 | **Proposée (2026-11-21)**, à confirmer par le propriétaire ; implémentée et testée en local, non déployée | [0018](adr/0018-aws-test-deployment-architecture.md) | T5.1–T5.5, T5.7, T6.1–T6.6, T7.2–T7.4 | FR-12, FR-13, FR-14, FR-15 / AC-09, AC-12, AC-19 |
 
 Note : l'arbitrage a d'abord indiqué de ne pas figer région, modèle et budget (D-12), puis fourni la région et le budget. Le modèle Bedrock reste explicitement non choisi.
 
@@ -60,7 +61,7 @@ Note : l'arbitrage a d'abord indiqué de ne pas figer région, modèle et budget
 | Horodatages météo et reconstruction à T-2h | Test de [dataset-card.md](../dataset-card.md) section 4 (T1.5) | T3.4, T3.7 (partie météo), météo du mode de prédiction D-02 |
 | Dates exactes du découpage | Couverture mensuelle (T1.2) puis T3.6 | T3.6, WP4 |
 | Modèle Bedrock | ADR-0012, T8.1 | T8.5 à T8.8 |
-| Estimation des coûts ≤ 100 USD/mois (point G0) | [cost-estimate.md](../04-quality/cost-estimate.md), T0.8 | Tout déploiement AWS payant (WP5 à WP9) |
+| Estimation des coûts ≤ 100 USD/mois (point G0) | **Levé pour l'environnement de test le 2026-11-21**, sur demande explicite du propriétaire (« déployer sur AWS (test) ») ; hypothèses d'usage (§4 de [cost-estimate.md](../04-quality/cost-estimate.md)) toujours à valider ; recalcul avec les coûts réels après le premier mois | Environnement `prod` (non prévu) |
 | Inférence serverless SageMaker | T5.7 | Choix définitif d'hébergement |
 | Magasin vectoriel du RAG | T9.2 | T9.3 |
 
@@ -71,7 +72,8 @@ Note : l'arbitrage a d'abord indiqué de ne pas figer région, modèle et budget
 | Téléchargement complet BTS/NOAA (T1.1), puis WP2 | Licences BTS/NOAA lues et jugées compatibles (D-18 est approuvée) |
 | T3.4, T3.7 (météo) | Faisabilité T-2h confirmée (D-01) |
 | T3.6 | Couverture mensuelle vérifiée |
-| T5.x à T9.x (déploiements) | Estimation de coûts approuvée (G0) |
+| T5.6 (endpoint SageMaker) | Remplacée par l'inférence dans la Lambda si ADR-0018 est acceptée |
+| T8.x, T9.x (Bedrock, RAG) | Modèle Bedrock vérifié (ADR-0012) |
 | T8.5 → T8.8 | Modèle Bedrock vérifié et choisi (ADR-0012) |
 | T9.3 | Magasin vectoriel décidé (T9.2) |
 

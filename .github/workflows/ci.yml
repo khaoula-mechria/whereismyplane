@@ -26,3 +26,10 @@ jobs:
         run: uv run pytest
       - name: Scan de secrets
         run: uv run python scripts/check_secrets.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Synthèse CDK (sans compte AWS, aucun déploiement)
+        run: |
+          uv run python scripts/build_lambda_context.py
+          npx --yes aws-cdk@2.1147.0 synth -q -c budget_email=ci@example.com

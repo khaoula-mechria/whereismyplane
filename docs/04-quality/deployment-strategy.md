@@ -1,5 +1,7 @@
 # Stratégie de déploiement
 
+> **2026-11-21** — Environnement `dev` implémenté en CDK : [infra/README.md](../../infra/README.md) (déployer, réentraîner, contrôler les coûts, détruire). Architecture : [ADR-0018](../05-decisions/adr/0018-aws-test-deployment-architecture.md) (**proposée**) — **aucun endpoint SageMaker** (inférence dans la Lambda), ce qui remplace les étapes 3 et 5 de la procédure de démonstration (§7) si l'ADR est acceptée.
+
 Statut : **[Proposé]**, sauf mention contraire. Principes confirmés : tout est décrit en CDK (Python) ; région `us-east-1` ; on développe en local avant d'activer des ressources payantes ; **aucun déploiement payant avant l'estimation de coûts approuvée (G0)** ; budget maximal 100 USD/mois ([cost-estimate.md](cost-estimate.md)).
 
 ## 1. Environnements

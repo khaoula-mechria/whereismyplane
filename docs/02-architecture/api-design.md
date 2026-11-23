@@ -60,8 +60,10 @@ Sortie : voir l'exemple de [use-cases.md](../01-planning/use-cases.md#uc-02--pr�
 // réponse
 { "answer": "…", 
   "sources": [{"tool": "get_airline_delay_statistics", "period": "<période réelle du dataset>"}],
-  "tool_calls": 2, "truncated": false }
+  "tool_calls": 2, "truncated": false, "grounded": true }
 ```
+
+**Version de test (2026-11-21)** : implémentée (`api/assistant_handler.py`, `assistant/`, `tools/`) mais **désactivée** tant qu'aucun modèle n'est fourni au déploiement (503 `assistant_unavailable`). `grounded: false` signale une réponse retirée parce qu'elle contenait un chiffre absent des résultats des outils (NFR-06). Les outils statistiques acceptent `year` et `month` (pas encore `from`/`to`). L'historique de conversation n'est pas encore transmis au modèle. Erreur du modèle de langage : 503 `model_unavailable`.
 
 Historique de conversation : géré côté client (envoyé avec la requête), sans base de sessions (D-09). Le modèle Bedrock utilisé est un paramètre de configuration (non choisi, [ADR-0012](../05-decisions/adr/0012-bedrock-model-selection.md)).
 

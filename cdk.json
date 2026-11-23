@@ -1,0 +1,8 @@
+{
+  "app": "uv run python -m infra.app",
+  "context": {
+    "runtime_image_dir": "build/runtime",
+    "budget_usd": 100,
+    "@aws-cdk/core:defaultCrossStackReferences": "strong"
+  }
+}

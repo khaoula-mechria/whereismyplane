@@ -44,6 +44,14 @@ class PredictionService:
         self._backend = backend
         self._replay = replay
 
+    @property
+    def model_version(self) -> str:
+        return self._backend.model_version
+
+    @property
+    def modes(self) -> list[str]:
+        return ["manual", "replay"] if self._replay is not None else ["manual"]
+
     def handle(self, request: Mapping[str, Any]) -> dict[str, Any]:
         if not isinstance(request, Mapping):
             raise InvalidRequestError("le corps doit être un objet JSON")

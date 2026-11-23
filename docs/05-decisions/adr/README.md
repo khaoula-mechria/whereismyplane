@@ -21,6 +21,7 @@ Une ADR par décision structurante : contexte, décision, alternatives, conséqu
 | [0015](0015-classification-threshold-selection.md) | Choix du seuil de classification | Acceptée | D-08 |
 | [0016](0016-dataset-acquisition-strategy.md) | Stratégie d'acquisition du dataset (reconstruction BTS + NOAA) | Acceptée (licences à lire avant téléchargement complet) | D-18, D-19 |
 | [0017](0017-regression-postponed.md) | Régression reportée : classification seule pour l'instant | Acceptée | D-21 |
+| [0018](0018-aws-test-deployment-architecture.md) | Déploiement AWS de test : inférence dans la Lambda, bundle S3 promu depuis le Model Registry | **Proposée** (2026-11-21) ; modifierait 0002 (job Glue), 0007 (endpoint) et D-06 | D-23 |
 
 D-10 (objectifs de latence) et D-14 (documents de pilotage) n'ont pas d'ADR : voir [decisions-pending.md](../decisions-pending.md).
 

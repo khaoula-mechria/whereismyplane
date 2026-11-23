@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import json
 import sys
 from pathlib import Path
 
@@ -19,30 +17,44 @@ pandas==3.1.1
 xgboost==3.4.1
 """
 
+LOCK = """
+version = 1
 
-def _release(tmp_path: Path) -> Path:
-    rel = tmp_path / "release"
-    rel.mkdir()
-    (rel / "classifier.json").write_text('{"model": 1}', encoding="utf-8")
-    (rel / "meta.json").write_text('{"meta": 1}', encoding="utf-8")
+[[package]]
+name = "pytest"
+version = "9.2.0"
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "pluggy" },
+    { name = "packaging" },
+]
 
-    def sha(name: str) -> str:
-        return hashlib.sha256((rel / name).read_bytes()).hexdigest()
+[[package]]
+name = "pluggy"
+version = "1.7.0"
 
-    manifest = {
-        "model_version": f"clf-{sha('classifier.json')[:12]}",
-        "files": {"classifier.json": sha("classifier.json"), "meta.json": sha("meta.json")},
-    }
-    (rel / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-    return rel
+[[package]]
+name = "packaging"
+version = "26.3"
+
+[[package]]
+name = "colorama"
+version = "0.4.6"
+"""
 
 
-def _serving(tmp_path: Path) -> Path:
-    srv = tmp_path / "serving"
-    srv.mkdir()
-    for name in blc.SERVING_FILES:
-        (srv / name).write_bytes(b"x")
-    return srv
+def _image_dir(tmp_path: Path) -> Path:
+    img = tmp_path / "image"
+    img.mkdir()
+    (img / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
+    (img / "entrypoint.sh").write_bytes(b"#!/bin/sh\r\nexec true\r\n")
+    return img
+
+
+def _check(tmp_path: Path) -> Path:
+    check = tmp_path / "test_leakage.py"
+    check.write_text("def test_ok() -> None:\n    assert True\n", encoding="utf-8")
+    return check
 
 
 def test_requirements_drop_nvidia_and_keep_the_rest() -> None:
@@ -52,44 +64,40 @@ def test_requirements_drop_nvidia_and_keep_the_rest() -> None:
     assert "# via xgboost" not in out  # le commentaire du paquet retiré part avec lui
 
 
-def test_stage_builds_context_and_checks_integrity(tmp_path: Path) -> None:
+def test_pytest_closure_is_pinned_from_lock_without_windows_only_packages() -> None:
+    pins = blc.pinned_closure(LOCK, ["pytest"])
+    assert pins == ["packaging==26.3", "pluggy==1.7.0", "pytest==9.2.0"]
+
+
+def test_merge_does_not_duplicate_existing_packages() -> None:
+    merged = blc.merge_requirements(
+        "packaging==26.3\npandas==3.1.1\n", ["packaging==26.3", "pytest==9.2.0"]
+    )
+    assert merged.count("packaging==") == 1 and "pytest==9.2.0" in merged
+
+
+def test_stage_builds_context_without_model_or_data(tmp_path: Path) -> None:
     pkg = tmp_path / "pkg"
-    (pkg / "sub").mkdir(parents=True)
+    (pkg / "sub" / "__pycache__").mkdir(parents=True)
     (pkg / "__init__.py").write_text("", encoding="utf-8")
-    (pkg / "sub" / "__pycache__").mkdir()
     (pkg / "sub" / "__pycache__" / "x.pyc").write_bytes(b"x")
-    dockerfile = tmp_path / "Dockerfile"
-    dockerfile.write_text("FROM scratch\n", encoding="utf-8")
     out = tmp_path / "ctx"
-    info = blc.stage(out, _serving(tmp_path), _release(tmp_path), REQUIREMENTS, pkg, dockerfile)
-    assert str(info["model_version"]).startswith("clf-")
-    for rel in ("Dockerfile", "requirements.txt", "aeropulse/__init__.py", "release/manifest.json"):
+    blc.stage(out, "pandas==3.1.1\n", pkg, _image_dir(tmp_path), [_check(tmp_path)])
+    for rel in ("Dockerfile", "entrypoint.sh", "requirements.txt", "aeropulse/__init__.py"):
         assert (out / rel).exists()
+    assert (out / "checks" / "test_leakage.py").exists()
     assert not (out / "aeropulse" / "sub" / "__pycache__").exists()
-    assert not (out / "release" / "regressor.json").exists()
+    assert not (out / "release").exists() and not (out / "serving").exists()  # ADR-0018
+    assert b"\r\n" not in (out / "entrypoint.sh").read_bytes()
 
 
-def test_replay_table_is_copied_when_present(tmp_path: Path) -> None:
-    srv = _serving(tmp_path)
-    (srv / "replay.parquet").write_bytes(b"r")
-    pkg = tmp_path / "pkg"
-    pkg.mkdir()
-    out = tmp_path / "ctx"
-    (tmp_path / "Dockerfile.x").write_text("FROM scratch\n", encoding="utf-8")
-    blc.stage(out, srv, _release(tmp_path), REQUIREMENTS, pkg, tmp_path / "Dockerfile.x")
-    assert (out / "serving" / "replay.parquet").exists()
-
-
-def test_tampered_model_is_refused(tmp_path: Path) -> None:
-    rel = _release(tmp_path)
-    (rel / "classifier.json").write_text('{"model": 2}', encoding="utf-8")  # modifié après export
-    with pytest.raises(blc.IntegrityError):
-        blc.stage(tmp_path / "ctx", _serving(tmp_path), rel, REQUIREMENTS, tmp_path, tmp_path / "x")
+def test_missing_leakage_tests_are_refused(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError):
+        blc.stage(tmp_path / "ctx", "", tmp_path, _image_dir(tmp_path), [tmp_path / "absent.py"])
     assert not (tmp_path / "ctx").exists()
 
 
-def test_missing_serving_table_is_refused(tmp_path: Path) -> None:
-    srv = _serving(tmp_path)
-    (srv / "routes.parquet").unlink()
-    with pytest.raises(FileNotFoundError):
-        blc.stage(tmp_path / "ctx", srv, _release(tmp_path), REQUIREMENTS, tmp_path, tmp_path / "x")
+def test_real_image_files_exist() -> None:
+    for name in blc.IMAGE_FILES:
+        assert (blc.IMAGE_DIR / name).is_file()
+    assert all(c.is_file() for c in blc.CHECKS)

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AeroPulse — console de test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>AeroPulse <span class="tag">console de test</span></h1>
+    <p class="warning">Modèle entraîné sur des données historiques 2023–2025 (JFK, EWR, LGA) :
+      ce n'est <strong>pas</strong> une prévision en temps réel. Les explications indiquent une
+      influence sur le modèle, pas une cause.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Accès</h2>
+      <label>Clé d'API (jamais stockée dans la page ; conservée pour cet onglet seulement)
+        <input id="api-key" type="password" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="row">
+        <button id="btn-health" type="button">Santé (/v1/health)</button>
+        <button id="btn-meta" type="button">Listes autorisées (/v1/meta)</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Prédiction — rejeu d'un vol de la période de test</h2>
+      <form id="form-replay">
+        <label>flight_id (AAAA-MM-JJ_&lt;compagnie&gt;&lt;numéro&gt;_&lt;ORI&gt;_&lt;HHMM&gt;)
+          <input name="flight_id" required maxlength="40" placeholder="2025-03-14_B6123_JFK_0830">
+        </label>
+        <button type="submit">Prédire (rejeu)</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Prédiction — saisie manuelle</h2>
+      <form id="form-manual">
+        <div class="grid">
+          <label>Compagnie <input name="airline" required maxlength="3" placeholder="B6"></label>
+          <label>Origine
+            <select name="origin"><option>JFK</option><option>EWR</option><option>LGA</option></select>
+          </label>
+          <label>Destination <input name="destination" required maxlength="3" placeholder="LAX"></label>
+          <label>Départ programmé (ISO 8601 avec fuseau)
+            <input name="scheduled_departure" required maxlength="40" value="2025-03-14T08:30:00-04:00">
+          </label>
+        </div>
+        <button type="submit">Prédire</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Statistiques historiques</h2>
+      <form id="form-stats">
+        <div class="grid">
+          <label>Dimension
+            <select name="dimension">
+              <option value="carrier">compagnie</option>
+              <option value="airport">aéroport</option>
+              <option value="route">itinéraire</option>
+            </select>
+          </label>
+          <label>Compagnie <input name="carrier" maxlength="3"></label>
+          <label>Origine <input name="origin" maxlength="3"></label>
+          <label>Année <input name="year" inputmode="numeric" maxlength="4"></label>
+          <label>Mois <input name="month" inputmode="numeric" maxlength="2"></label>
+          <label>Limite <input name="limit" inputmode="numeric" maxlength="3" value="20"></label>
+        </div>
+        <button type="submit">Consulter</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Assistant (version de test)</h2>
+      <p class="note">Disponible seulement si l'API a été déployée avec un modèle Bedrock
+        (<code>-c bedrock_model_id=…</code>) ; sinon la route répond 403 ou 503. Les chiffres de la
+        réponse sont vérifiés contre les résultats des outils.</p>
+      <form id="form-chat">
+        <label>Question <input name="message" maxlength="1000"
+          placeholder="Quel est le taux de retard de JetBlue à JFK en 2024 ?"></label>
+        <button type="submit">Demander</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Réponse <span id="status" class="status"></span></h2>
+      <div id="summary"></div>
+      <pre id="output" aria-live="polite">—</pre>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

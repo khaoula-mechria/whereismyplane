@@ -1,31 +1,31 @@
-"""Assemble le contexte de build de l'image Lambda de prédiction (option A).
+"""Assemble le contexte de build de l'image d'exécution AeroPulse (Lambda + jobs SageMaker).
 
-Vérifie l'intégrité du modèle (SHA-256 du manifeste), copie le code, les tables de service et le
-modèle, et écrit ``requirements.txt`` depuis ``uv.lock`` (versions déjà testées) **sans** les
-paquets ``nvidia-*`` (GPU, inutiles et très lourds). Aucun secret, aucune donnée brute.
-Commande : ``uv run python scripts/build_lambda_context.py``.
+Copie le paquet ``aeropulse``, les tests de non-fuite (exécutés par l'étape « Evaluate » du
+pipeline), le Dockerfile et le point d'entrée, et écrit ``requirements.txt`` depuis ``uv.lock``
+(versions déjà testées) **sans** les paquets ``nvidia-*`` (GPU, inutiles et très lourds), plus
+``pytest`` et ses dépendances épinglés depuis le même verrou.
+
+Le modèle et les tables de service ne sont **plus** dans l'image (ADR-0018) : ils sont publiés
+dans S3 sous forme de bundle vérifié (``scripts/aws/aeropulse_aws.py publish-local-bundle``).
+Aucun secret, aucune donnée. Commande : ``uv run python scripts/build_lambda_context.py``.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import shutil
 import subprocess
 import sys
-from collections.abc import Sequence
+import tomllib
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DOCKERFILE = ROOT / "infra" / "lambda" / "predict" / "Dockerfile"
-SERVING_FILES = ("observations.parquet", "routes.parquet", "history_daily.parquet")
-OPTIONAL_SERVING_FILES = ("replay.parquet",)  # mode rejeu (D-02), copié s'il existe
-RELEASE_FILES = ("classifier.json", "meta.json", "manifest.json")
-
-
-class IntegrityError(RuntimeError):
-    """Un artefact ne correspond pas à son empreinte : le build est refusé."""
+IMAGE_DIR = ROOT / "infra" / "images" / "runtime"
+IMAGE_FILES = ("Dockerfile", "entrypoint.sh")
+CHECKS = (ROOT / "tests" / "test_leakage.py",)
+CHECK_TOOLS = ("pytest",)
 
 
 def filter_requirements(text: str) -> str:
@@ -43,6 +43,32 @@ def filter_requirements(text: str) -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
+def pinned_closure(lock_text: str, roots: Iterable[str]) -> list[str]:
+    """``nom==version`` pour ``roots`` et leurs dépendances (hors Windows), depuis ``uv.lock``."""
+    packages = {p["name"]: p for p in tomllib.loads(lock_text)["package"]}
+    seen: dict[str, str] = {}
+    todo = list(roots)
+    while todo:
+        name = todo.pop()
+        if name in seen:
+            continue
+        pkg = packages[name]
+        seen[name] = str(pkg["version"])
+        for dep in pkg.get("dependencies", []):
+            if "win32" not in str(dep.get("marker", "")):
+                todo.append(str(dep["name"]))
+    return [f"{n}=={v}" for n, v in sorted(seen.items())]
+
+
+def merge_requirements(base: str, extra: Sequence[str]) -> str:
+    """Ajoute les épinglages ``extra`` absents de ``base`` (sans doublon de paquet)."""
+    present = {line.split("==")[0].strip().lower() for line in base.splitlines() if "==" in line}
+    added = [e for e in extra if e.split("==")[0].lower() not in present]
+    if not added:
+        return base
+    return base.rstrip() + "\n# contrôles de non-fuite (étape Evaluate)\n" + "\n".join(added) + "\n"
+
+
 def export_requirements() -> str:
     result = subprocess.run(
         ["uv", "export", "--no-dev", "--no-hashes", "--no-emit-project", "--frozen"],
@@ -54,59 +80,47 @@ def export_requirements() -> str:
     return result.stdout
 
 
-def verify_release(release_dir: Path) -> dict[str, object]:
-    manifest = json.loads((release_dir / "manifest.json").read_text(encoding="utf-8"))
-    for name, expected in manifest["files"].items():
-        actual = hashlib.sha256((release_dir / name).read_bytes()).hexdigest()
-        if actual != expected:
-            raise IntegrityError(f"{name} : empreinte différente de celle du manifeste")
-    digest = manifest["files"]["classifier.json"]
-    if manifest["model_version"] != f"clf-{digest[:12]}":
-        raise IntegrityError("version du modèle incohérente avec l'empreinte du classifieur")
-    return manifest  # type: ignore[no-any-return]
-
-
 def stage(
     out_dir: Path,
-    serving_dir: Path,
-    release_dir: Path,
     requirements: str,
     package_dir: Path = ROOT / "src" / "aeropulse",
-    dockerfile: Path = DOCKERFILE,
+    image_dir: Path = IMAGE_DIR,
+    checks: Sequence[Path] = CHECKS,
 ) -> dict[str, object]:
-    manifest = verify_release(release_dir)
-    for name in SERVING_FILES:
-        if not (serving_dir / name).exists():
-            raise FileNotFoundError(f"table de service manquante : {name}")
+    for name in IMAGE_FILES:
+        if not (image_dir / name).is_file():
+            raise FileNotFoundError(f"fichier d'image manquant : {name}")
+    missing = [str(c) for c in checks if not c.is_file()]
+    if missing:
+        raise FileNotFoundError(f"tests de non-fuite manquants : {missing}")
     if out_dir.exists():
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
     shutil.copytree(
         package_dir, out_dir / "aeropulse", ignore=shutil.ignore_patterns("__pycache__", "*.pyc")
     )
-    (out_dir / "serving").mkdir()
-    for name in (*SERVING_FILES, *OPTIONAL_SERVING_FILES):
-        if (serving_dir / name).exists():
-            shutil.copyfile(serving_dir / name, out_dir / "serving" / name)
-    (out_dir / "release").mkdir()
-    for name in RELEASE_FILES:
-        shutil.copyfile(release_dir / name, out_dir / "release" / name)
-    (out_dir / "requirements.txt").write_text(filter_requirements(requirements), encoding="utf-8")
-    shutil.copyfile(dockerfile, out_dir / "Dockerfile")
-    return {"model_version": manifest["model_version"], "out_dir": str(out_dir)}
+    (out_dir / "checks").mkdir()
+    for check in checks:
+        shutil.copyfile(check, out_dir / "checks" / check.name)
+    (out_dir / "requirements.txt").write_text(requirements, encoding="utf-8")
+    for name in IMAGE_FILES:
+        # Fins de ligne Unix pour le script shell (le Dockerfile les corrige aussi).
+        data = (image_dir / name).read_bytes().replace(b"\r\n", b"\n")
+        (out_dir / name).write_bytes(data)
+    return {"out_dir": str(out_dir), "checks": [c.name for c in checks]}
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--serving-dir", type=Path, default=ROOT / "data" / "serving")
-    p.add_argument("--release-dir", type=Path, default=ROOT / "data" / "ml" / "release")
-    p.add_argument("--out-dir", type=Path, default=ROOT / "build" / "lambda-predict")
+    p.add_argument("--out-dir", type=Path, default=ROOT / "build" / "runtime")
     args = p.parse_args(argv)
-    info = stage(args.out_dir, args.serving_dir, args.release_dir, export_requirements())
-    print(json.dumps(info, indent=2))
-    print(
-        "Étape suivante (Docker démarré) : docker build -t aeropulse-predict " + str(args.out_dir)
+    lock = (ROOT / "uv.lock").read_text(encoding="utf-8")
+    requirements = merge_requirements(
+        filter_requirements(export_requirements()), pinned_closure(lock, CHECK_TOOLS)
     )
+    info = stage(args.out_dir, requirements)
+    print(json.dumps(info, indent=2))
+    print("Étape suivante : le déploiement CDK construit l'image depuis " + str(args.out_dir))
     return 0
 
 

@@ -1,4 +1,1 @@
-"""Une stack CDK par fichier.
-
-Squelette : non implémenté (décisions requises par le lot concerné non tranchées).
-"""
+"""Une stack CDK par fichier (ADR-0006) ; ordre et dépendances dans ``infra/app.py``."""

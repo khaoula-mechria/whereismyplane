@@ -1,5 +1,7 @@
 # Maîtrise et estimation des coûts
 
+> **Mise à jour du 2026-11-21 : G0 levé pour l'environnement de test** (demande explicite du propriétaire). Le déploiement implémenté ([ADR-0018](../05-decisions/adr/0018-aws-test-deployment-architecture.md), proposée) **ne crée aucun endpoint SageMaker** : postes recalculés au §10.
+
 > **Mise à jour du 2026-11-14 (ADR-0017) : un seul endpoint (classification) tant que la régression est reportée.** Un second endpoint ajouterait environ 0,92 USD (nominal) à 19,32 USD (oublié une semaine) par mois.** Les totaux ci-dessous sont recalculés pour un endpoint ; le coût d'entraînement est conservé tel quel (prudent).
 >
 > Statut : **estimation réalisée le 2026-11-14 à partir des tarifs officiels `us-east-1` (AWS Price List) — en attente d'approbation du propriétaire (G0).** Les tarifs sont relevés, les volumes d'usage sont des **hypothèses** à valider ; les postes non relevés sont signalés. Contrainte validée : **budget maximal 100 USD/mois** (développement et démonstrations), région `us-east-1` ([ADR-0011](../05-decisions/adr/0011-region-budget-cost-guardrails.md)).
@@ -48,7 +50,7 @@ Source : fichiers publics AWS Price List (`pricing.us-east-1.amazonaws.com/offer
 | Bedrock Claude Haiku 5.5 (régional, standard) | 0,11 USD / M jetons d'entrée ; 0,55 USD / M jetons de sortie |
 | Bedrock Claude Sonnet 5.5 (régional, standard) | 2,20 USD / M jetons d'entrée ; 11,00 USD / M jetons de sortie |
 
-**Non relevés (à compléter avant G0)** : CloudFront (transfert sortant), Bedrock Knowledge Bases et son magasin vectoriel (RAG optionnel, D-15), durée minimale de facturation et nombre minimal de DPU de Glue, transfert de données sortant S3/API. **La présence d'un modèle dans la liste tarifaire ne prouve pas sa disponibilité, le Tool Calling ni la qualité en français** : le choix du modèle reste en attente ([ADR-0012](../05-decisions/adr/0012-bedrock-model-selection.md)).
+**Non relevés (à compléter avant G0)** : **registre d'images ECR** (l'image Lambda de prédiction fait 2,18 Go non compressée : stockage mensuel à chiffrer), CloudFront (transfert sortant), Bedrock Knowledge Bases et son magasin vectoriel (RAG optionnel, D-15), durée minimale de facturation et nombre minimal de DPU de Glue, transfert de données sortant S3/API. **La présence d'un modèle dans la liste tarifaire ne prouve pas sa disponibilité, le Tool Calling ni la qualité en français** : le choix du modèle reste en attente ([ADR-0012](../05-decisions/adr/0012-bedrock-model-selection.md)).
 
 ## 4. Hypothèses d'usage (à valider par le propriétaire)
 
@@ -124,3 +126,22 @@ Conditions proposées pour lever G0 (à approuver ou amender par le propriétair
 | Date | Mois | Dépense observée | Ressources actives | Commentaire |
 |---|---|---|---|---|
 | — | — | — | — | Aucune ressource AWS déployée |
+
+## 10. Déploiement de test implémenté (ADR-0018) — postes qui changent
+
+Calcul avec les **tarifs du §3** ; les postes sans tarif relevé sont signalés, pas estimés.
+
+| Poste | Estimation §5 (nominal) | Déploiement de test | Commentaire |
+|---|---|---|---|
+| SageMaker — endpoint | 0,92 USD | **0** | Aucun endpoint : inférence dans la Lambda. Le garde-fou quotidien signale tout endpoint présent |
+| SageMaker — exécutions du pipeline | 0,46 USD (entraînement seul) | ≈ 0,35 USD | Hypothèse : 4 exécutions/mois × 3 étapes × 15 min en ml.m5.large au tarif d'entraînement (0,115 USD/h). **Tarif Processing ml.m5.large non relevé** ; durée réelle à mesurer à la première exécution (en local : 44 s de préparation, 34 s d'entraînement, hors démarrage des instances) |
+| Glue (job ETL) | 1,76 USD | **0** | Pas de job Glue : préparation dans l'étape Processing. Le catalogue Glue (1 base, 1 table) reste ; tarif du catalogue non relevé (sous l'offre gratuite annoncée, non vérifié) |
+| Secrets Manager | 0,80 USD | **0** | Aucun secret : la clé d'API est gérée par API Gateway |
+| CloudWatch | 1,56 USD | inchangé | Les 5 alarmes (5 × 0,10 USD, tarif « à confirmer ») sont déjà comprises dans la ligne du §5 ; journaux conservés 14 jours |
+| Lambda | 0,34 USD | même ordre | 1 536 Mo pour la prédiction, 1 024 Mo pour les statistiques ; démarrages à froid plus longs (image de 2 Go + bundle) |
+| **ECR (image d'exécution)** | non relevé | **non relevé** | Une image (~2,2 Go non compressée) par version de code, dans le dépôt d'actifs de `cdk bootstrap`, **non supprimée par `cdk destroy`** ; taille compressée à mesurer après le premier envoi |
+| **CloudFront** | non relevé | **non relevé** | Console de test et relais `/v1/*` ; transfert attendu très faible |
+| AWS Budgets | — | non relevé | 1 budget, 4 notifications |
+
+Conclusion provisoire : le sous-total nominal hors Bedrock passe de 6,03 USD à **2,44 USD** (6,03 − 0,92 endpoint − 1,76 Glue − 0,80 secrets − 0,46 entraînement + 0,35 pipeline), **hors ECR et CloudFront** (non relevés), car il n'y a plus ni endpoint ni job Glue. Bedrock n'est pas déployé (ADR-0012). **Le risque principal « endpoint oublié » disparaît du déploiement**, mais il reste possible à la main (garde-fou quotidien). Ces chiffres sont **à remplacer par la facture réelle** après le premier mois (Cost Explorer, `aeropulse_aws.py check-resources --cost`).
+

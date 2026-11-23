@@ -20,6 +20,9 @@ dev = [
     "mypy>=1.10",
     "pre-commit>=3.7",
     "pandas-stubs>=3.1.0.261029",
+    "aws-cdk-lib==2.275.0",
+    "constructs>=10.4",
+    "boto3>=1.40",
 ]
 
 [build-system]
@@ -31,20 +34,27 @@ packages = ["src/aeropulse"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]  # infra/ et pipelines/ importables (CDK, définition du pipeline)
 addopts = "-ra"
 
 [tool.ruff]
 line-length = 100
 src = ["src", "tests", "scripts"]
+# Scripts d'exploration (EDA) : code exploratoire, non livré, hors des règles strictes.
+extend-exclude = ["scripts/eda"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["aeropulse", "infra", "pipelines"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
-files = ["src", "tests", "scripts"]
+files = ["src", "tests", "scripts", "infra", "pipelines"]
+exclude = ["^scripts/eda/"]  # exploration (EDA), non livrée
 
 [[tool.mypy.overrides]]
-module = ["sklearn.*", "xgboost.*"]
+module = ["sklearn.*", "xgboost.*", "boto3.*", "botocore.*"]
 ignore_missing_imports = true

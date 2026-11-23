@@ -46,15 +46,17 @@ Documentation de planification et de conception. Les décisions D-01 à D-17 ont
 ### 04 — Qualité
 | Document | Contenu |
 |---|---|
-| [cost-estimate.md](04-quality/cost-estimate.md) | Garde-fous de coût, estimation par service (à produire) |
+| [cost-estimate.md](04-quality/cost-estimate.md) | Garde-fous de coût, estimation par service ; G0 levé pour le test (2026-11-21), §10 = déploiement implémenté |
+| [model-report.md](04-quality/model-report.md) | Rapport de modélisation : baselines, modèles, test, SHAP, G3 |
+| [eda-report.md](04-quality/eda-report.md) | Analyse exploratoire à T-2h : constats, expériences, plan de réentraînement |
 | [testing-strategy.md](04-quality/testing-strategy.md) | Niveaux de test, fuite, assistant |
 | [quality-attributes.md](04-quality/quality-attributes.md) | Attributs, tactiques, compromis |
-| [deployment-strategy.md](04-quality/deployment-strategy.md) | Environnements, CI/CD, cycle de vie des coûts |
+| [deployment-strategy.md](04-quality/deployment-strategy.md) | Environnements, CI/CD, cycle de vie des coûts ; procédure concrète : [infra/README.md](../infra/README.md) |
 
 ### 05 — Décisions
 | Document | Contenu |
 |---|---|
-| [adr/](05-decisions/adr/README.md) | ADR-0001…0017 |
+| [adr/](05-decisions/adr/README.md) | ADR-0001…0018 |
 | [decisions-pending.md](05-decisions/decisions-pending.md) | Registre D-01…D-19 : statuts, blocages, traçabilité |
 
 ### Pilotage et données
